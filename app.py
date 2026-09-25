@@ -32,8 +32,7 @@ from riceguard_ui.mock import build_mock_result, draw_sample_leaf, hash_string, 
 
 STYLES = Path(__file__).parent / "riceguard_ui" / "styles"
 MODELS = pipeline.available()        # [] -> mock results
-if MODELS:
-    APP["stage"] = f"{pipeline.STAGE_LABEL} models"
+APP["stage"] = f"{pipeline.STAGE_LABEL} models" if MODELS else f"UI preview · {pipeline.unavailable_reason()}"
 
 st.set_page_config(page_title="RiceGuard", page_icon=favicon(), layout="wide", initial_sidebar_state="auto")
 ss = st.session_state

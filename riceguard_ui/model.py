@@ -8,6 +8,7 @@ mock results (riceguard_ui/mock.py) wherever TensorFlow or the model files are m
 """
 import importlib.util
 import io
+import sys
 from functools import lru_cache
 from pathlib import Path
 
@@ -36,12 +37,26 @@ HEAT_THRESHOLD = 0.5
 SEVERITY_CUTOFFS = ((12.0, "Mild"), (25.0, "Moderate"))
 
 
+def _files() -> list:
+    return [n for n, (folder, _) in MODELS.items() if (MODELS_DIR / folder / "model.keras").is_file()]
+
+
+def _tensorflow() -> bool:
+    return all(importlib.util.find_spec(m) for m in ("tensorflow", "tf_keras_vis"))
+
+
 def available() -> list:
     """Models whose file is present and TensorFlow is installed, default first. Empty -> the app uses mock results."""
-    if not all(importlib.util.find_spec(m) for m in ("tensorflow", "tf_keras_vis")):
-        return []
-    names = [n for n, (folder, _) in MODELS.items() if (MODELS_DIR / folder / "model.keras").is_file()]
-    return sorted(names, key=lambda n: n != DEFAULT_MODEL)
+    return sorted(_files(), key=lambda n: n != DEFAULT_MODEL) if _tensorflow() else []
+
+
+def unavailable_reason() -> str:
+    """Why the app is using mock results (shown next to the version, so a deployment problem is visible)."""
+    if not _files():
+        return "no model files"
+    if not _tensorflow():
+        return f"TensorFlow not installed (Python {sys.version_info.major}.{sys.version_info.minor})"
+    return ""
 
 
 @lru_cache(maxsize=None)
