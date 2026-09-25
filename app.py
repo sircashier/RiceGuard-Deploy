@@ -4,10 +4,11 @@ RiceGuard — Streamlit app.
 A copy of the React UI in web/ (same screens, wording, colours and flow), built in Streamlit so the whole
 app — model, Grad-CAM, severity and LLM — can later run as one Python program on Streamlit Community Cloud.
 
-The model is still MOCKED (riceguard_ui/mock.py): results are presets and the heatmap is random blobs,
-exactly like the React preview. Replace build_mock_result() with the real pipeline later; the UI stays put.
+Analysis uses the trained VGG16 / ResNet50 models with Grad-CAM (riceguard_ui/model.py) when their files are in
+models/ and TensorFlow is installed (the deploy repo). Otherwise it falls back to the MOCK results
+(riceguard_ui/mock.py), marked "Mock result" in the app. Follow-up answers are still the built-in mock answers.
 
-Run locally:  streamlit run app.py
+Run locally:  python -m streamlit run app.py   (real models need Python 3.12 or 3.13 for TensorFlow)
 """
 import base64
 import io
@@ -22,13 +23,17 @@ import streamlit as st
 from PIL import Image, ImageOps
 
 from riceguard_ui import fmt, views
+from riceguard_ui import model as pipeline
 from riceguard_ui.brand import favicon
-from riceguard_ui.content import (CLASS_INFO, CLASSES, DEFAULT_SETTINGS, MOCK_HISTORY, TITLES, UPLOAD, mock_answer,
+from riceguard_ui.content import (APP, CLASS_INFO, CLASSES, DEFAULT_SETTINGS, MOCK_HISTORY, TITLES, UPLOAD, mock_answer,
                                   suggestions_for)
 from riceguard_ui.icons import ICONS, mask_url
 from riceguard_ui.mock import build_mock_result, draw_sample_leaf, hash_string, pick_mock, sample_leaf_file
 
 STYLES = Path(__file__).parent / "riceguard_ui" / "styles"
+MODELS = pipeline.available()        # [] -> mock results
+if MODELS:
+    APP["stage"] = f"{pipeline.STAGE_LABEL} models"
 
 st.set_page_config(page_title="RiceGuard", page_icon=favicon(), layout="wide", initial_sidebar_state="auto")
 ss = st.session_state
@@ -129,6 +134,20 @@ def _mock_result(preset: dict, seed: int, width: int, height: int, lang: str) ->
     return r
 
 
+@st.cache_resource(show_spinner=False)
+def _model(name: str):
+    """Load a trained model once per server (shared by every visitor)."""
+    return pipeline.load(name)
+
+
+def real_result(img: dict, lang: str) -> dict:
+    name = ss.settings["model"] if ss.settings["model"] in MODELS else MODELS[0]
+    out = pipeline.predict(_model(name), img["model_input"])
+    r = pipeline.result(name, out, (img["width"] or 800, img["height"] or 600), lang)
+    r["heatmap"] = data_uri(r["heatmap"], "image/jpeg")
+    return r
+
+
 def mock_history() -> list:
     """MOCK scan history for the Scan History page (web/src/data/mockHistory.ts)."""
     t0 = now()
@@ -149,7 +168,7 @@ def init_state():
     ss.settings = dict(DEFAULT_SETTINGS)
     ss.view = "new-scan"
     ss.turns = []
-    ss.history = mock_history()
+    ss.history = [] if MODELS else mock_history()   # no made-up scans next to real ones
     ss.welcome_error = None
     ss.composer_error = None
     ss.upload_n = 0          # bumped after every upload so the file pickers start empty again
@@ -196,7 +215,8 @@ def to_selected_image(name: str, data: bytes, mime: str):
     else:
         shown.convert("RGB").save(buf, "JPEG", quality=88)
         url = data_uri(buf.getvalue(), "image/jpeg")
-    return {"name": name, "size": len(data), "type": mime, "width": w, "height": h, "url": url}
+    return {"name": name, "size": len(data), "type": mime, "width": w, "height": h, "url": url,
+            "model_input": pipeline.stored_photo(data) if MODELS else None}
 
 
 def add_image(name: str, data: bytes, mime: str):
@@ -339,17 +359,28 @@ def finish_pending():
                 f"'[class*=\"__tick\"] button');b&&b.click();}},30);</script>", unsafe_allow_javascript=True)
         return
     if p[0] == "analysis":
-        time.sleep(2.2)
+        real = bool(MODELS)
+        if not real:
+            time.sleep(2.2)
         t = find(p[1])
         img_turn = t and find(t["image_turn_id"])
         if not t or t["status"] != "loading" or not img_turn:
             ss.pending = None
             return
         img = img_turn["image"]
-        preset, ss.last_mock = pick_mock(img["name"], ss.settings["mock_result"], ss.last_mock)
-        seed = hash_string(f"{img['name']}:{img['size']}:{int(time.time() * 1000)}")
-        result = _mock_result(preset, seed, img["width"] or 800, img["height"] or 600,
-                              ss.settings["explanation_language"])
+        lang = ss.settings["explanation_language"]
+        if real and img.get("model_input"):
+            try:
+                result = real_result(img, lang)
+            except Exception as e:
+                print("analysis failed:", repr(e))
+                t.update(status="error", error="I couldn't analyze this image. Try another photo.")
+                ss.pending = None
+                st.rerun()
+        else:
+            preset, ss.last_mock = pick_mock(img["name"], ss.settings["mock_result"], ss.last_mock)
+            seed = hash_string(f"{img['name']}:{img['size']}:{int(time.time() * 1000)}")
+            result = _mock_result(preset, seed, img["width"] or 800, img["height"] or 600, lang)
         t.update(status="done", result=result, created_at=now())
         if ss.settings["save_history"]:
             ss.history.insert(0, {"id": t["id"], "created_at": t["created_at"], "image": img, "result": result})
@@ -638,14 +669,25 @@ def settings_page():
                     btn("Clear", "clear_ask", variant="secondary", size="sm", icon="trash-2", icon_size=15,
                         disabled=n == 0, on_click=lambda: ss.__setitem__("confirm_clear", True))
 
-        with st.container(key="sgroup__testing"):
-            html(views.settings_group_title("Testing"))
-            with st.container(key="srow__only__mock", horizontal=True, vertical_alignment="center"):
-                html(views.setting_text("Mock detection result",
-                                        "The detection model isn't connected yet. Choose what Analyze Image returns."))
-                ss["sel__mock"] = s["mock_result"]
-                st.selectbox("Mock detection result", ["Random"] + CLASSES, key="sel__mock",
-                             label_visibility="collapsed", on_change=set_setting, args=("mock_result", "sel__mock"))
+        if MODELS:
+            with st.container(key="sgroup__model"):
+                html(views.settings_group_title("Model"))
+                with st.container(key="srow__only__model", horizontal=True, vertical_alignment="center"):
+                    html(views.setting_text("Detection model",
+                                            f"The trained CNN that analyzes photos ({pipeline.STAGE_LABEL}). "
+                                            f"{pipeline.DEFAULT_MODEL} had the better F1-score."))
+                    ss["sel__model"] = s["model"] if s["model"] in MODELS else MODELS[0]
+                    st.selectbox("Detection model", MODELS, key="sel__model", label_visibility="collapsed",
+                                 on_change=set_setting, args=("model", "sel__model"))
+        else:
+            with st.container(key="sgroup__testing"):
+                html(views.settings_group_title("Testing"))
+                with st.container(key="srow__only__mock", horizontal=True, vertical_alignment="center"):
+                    html(views.setting_text("Mock detection result",
+                                            "The detection model isn't connected yet. Choose what Analyze Image returns."))
+                    ss["sel__mock"] = s["mock_result"]
+                    st.selectbox("Mock detection result", ["Random"] + CLASSES, key="sel__mock",
+                                 label_visibility="collapsed", on_change=set_setting, args=("mock_result", "sel__mock"))
 
         html(views.settings_foot())
 

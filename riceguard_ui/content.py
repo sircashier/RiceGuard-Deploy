@@ -97,6 +97,7 @@ DEFAULT_SETTINGS = {
     "explanation_language": "English",
     "save_history": True,
     "mock_result": "Random",
+    "model": "ResNet50",       # used when the trained models are installed (riceguard_ui/model.py)
 }
 
 TITLES = {"new-scan": "New Scan", "history": "Scan History", "about": "About", "settings": "Settings"}
