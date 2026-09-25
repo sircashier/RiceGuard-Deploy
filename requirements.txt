@@ -1,0 +1,11 @@
+# --- UI (needed now, for local design loop) ---
+streamlit>=1.64
+pillow>=10.0
+numpy          # mock heatmap + sample leaf drawings (riceguard_ui/mock.py)
+
+# --- ML pipeline (added later; trained on Colab, not this machine) ---
+# tensorflow
+# tf-keras-vis
+# opencv-python-headless
+# scikit-learn
+# matplotlib

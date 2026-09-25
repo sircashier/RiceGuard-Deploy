@@ -1,0 +1,1132 @@
+/* ==========================================================================
+   Streamlit layer: makes Streamlit's own page and widgets look like the React UI in web/.
+   tokens.css (colours, radii, shadows) and app.css (the React styles, copied unchanged) load first.
+   Widgets are found by the key app.py gives them — Streamlit adds the class "st-key-" + key.
+   (Never write an angle bracket in this file: Streamlit drops a style block that contains one.)
+   ========================================================================== */
+
+/* ---------- Icons and logo (Streamlit strips svg tags, so these are CSS masks) ---------- */
+.rg-ic {
+  display: inline-block;
+  flex: none;
+  background-color: currentColor;
+  -webkit-mask: var(--rg-icon) center / contain no-repeat;
+  mask: var(--rg-icon) center / contain no-repeat;
+}
+.rg-logo {
+  display: inline-block;
+  position: relative;
+  flex: none;
+  background: var(--brand);
+}
+.rg-logo-stalk {
+  position: absolute;
+  inset: 0;
+  background-color: #fff;
+  -webkit-mask: var(--rg-icon) center / 100% 100% no-repeat;
+  mask: var(--rg-icon) center / 100% 100% no-repeat;
+}
+.notice .rg-ic,
+.guidance-note .rg-ic {
+  margin-top: 2px;
+}
+.guidance-note .rg-ic {
+  color: var(--text-3);
+}
+
+/* ---------- Page shell ---------- */
+.stApp {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+}
+[data-testid="stHtml"] {
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text);
+}
+/* Streamlit indents lists and sets paragraphs/lists to 1rem; the React styles expect plain elements */
+[data-testid="stHtml"] ul,
+[data-testid="stHtml"] ol,
+[data-testid="stHtml"] dl {
+  padding-left: 0;
+}
+:where([data-testid="stHtml"]) :is(p, ul, ol, dl) {
+  font-size: inherit;
+}
+[data-testid="stHtml"] .bullets {
+  padding-left: 20px;
+}
+.overlay-label {
+  font-size: 13px;
+}
+header[data-testid="stHeader"] {
+  background: transparent;
+  pointer-events: none;
+}
+header[data-testid="stHeader"] button {
+  pointer-events: auto;
+}
+[data-testid="stAppDeployButton"],
+[data-testid="stMainMenu"],
+[data-testid="stStatusWidget"],
+[data-testid="stDecoration"],
+[data-testid="stToolbarActions"] {
+  display: none !important;
+}
+[data-testid="stMainBlockContainer"] {
+  max-width: none;
+  padding: 0 24px 64px;
+}
+/* No automatic gaps between elements: each container below sets the React spacing itself. */
+[data-testid="stVerticalBlock"],
+[data-testid="stHorizontalBlock"] {
+  gap: 0;
+}
+/* Small groups inside a row keep their natural width instead of stretching */
+[data-testid="stLayoutWrapper"]:has(> [class*="st-key-ovlbtn__"]),
+[data-testid="stLayoutWrapper"]:has(> [class*="st-key-factions__"]),
+[data-testid="stLayoutWrapper"]:has(> [class*="st-key-opctl__"]),
+[data-testid="stLayoutWrapper"]:has(> .st-key-opval),
+[data-testid="stLayoutWrapper"]:has(> [class*="st-key-srowctl__"]) {
+  flex: none;
+  width: auto;
+}
+[data-testid="stElementContainer"]:has(> [data-testid="stHtml"] > style:only-child) {
+  display: none;
+}
+
+/* ---------- Sidebar ---------- */
+section[data-testid="stSidebar"] {
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+}
+section[data-testid="stSidebar"][aria-expanded="true"] {
+  width: var(--sidebar-w) !important;
+  min-width: var(--sidebar-w) !important;
+  max-width: var(--sidebar-w) !important;
+}
+[data-testid="stSidebarContent"] {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  background: var(--bg-sidebar);
+}
+[data-testid="stSidebarHeader"] {
+  position: absolute;
+  top: 16px;
+  right: 14px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  z-index: 2;
+}
+[data-testid="stLogoSpacer"] {
+  display: none;
+}
+[data-testid="stSidebarCollapseButton"] {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+[data-testid="stSidebarUserContent"] {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px 12px 12px;
+}
+[data-testid="stSidebarUserContent"] > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+[data-testid="stSidebarUserContent"] > div > [data-testid="stVerticalBlock"] {
+  flex: 1;
+}
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 2px 16px 6px;
+  box-sizing: content-box;
+}
+[class*="__newscan"] {
+  margin-bottom: 12px;
+}
+[data-testid="stLayoutWrapper"]:has(> .st-key-sidebar_foot) {
+  margin-top: auto;
+}
+.st-key-sidebar_foot {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* Streamlit's collapse / open-sidebar buttons, drawn as the React icon buttons */
+[data-testid="stSidebarCollapseButton"] button,
+[data-testid="stExpandSidebarButton"],
+[data-testid="stExpandSidebarButton"] button {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-2);
+}
+[data-testid="stSidebarCollapseButton"] button:hover,
+[data-testid="stExpandSidebarButton"]:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+[data-testid="stSidebarCollapseButton"] [data-testid="stIconMaterial"],
+[data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"] {
+  display: none;
+}
+[data-testid="stSidebarCollapseButton"] button::before,
+[data-testid="stExpandSidebarButton"]::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: var(--rg-icon) center / contain no-repeat;
+  mask: var(--rg-icon) center / contain no-repeat;
+}
+
+/* ---------- Top bar ---------- */
+[data-testid="stLayoutWrapper"]:has(> .st-key-topbar) {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.st-key-topbar {
+  height: var(--topbar-h) !important;
+  min-height: var(--topbar-h);
+  margin: 0 -24px;
+  padding: 0 20px;
+  background: var(--bg);
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+}
+.stApp:has(section[data-testid="stSidebar"][aria-expanded="false"]) .st-key-topbar {
+  padding-left: 64px;
+}
+/* the small logo in the top bar is only for when the sidebar is closed (phones) */
+.stApp:has(section[data-testid="stSidebar"][aria-expanded="true"]) .topbar-left .only-mobile {
+  display: none !important;
+}
+.st-key-topbar [data-testid="stElementContainer"]:has(.topbar-left) {
+  min-width: 0;
+}
+
+/* ---------- Page containers ---------- */
+[class*="st-key-page__"] {
+  width: 100%;
+  margin: 0 auto;
+}
+.st-key-page__welcome {
+  max-width: var(--content-w);
+  padding-top: clamp(20px, 7vh, 80px);
+  animation: rise 0.35s ease both;
+}
+.st-key-page__session {
+  max-width: var(--content-w);
+  padding-top: 20px;
+  min-height: calc(100vh - var(--topbar-h) - 8px);
+}
+.st-key-page__wide {
+  max-width: var(--content-w-wide);
+  padding-top: 16px;
+}
+.st-key-page__read {
+  max-width: 720px;
+  padding-top: 16px;
+}
+
+/* ---------- Buttons: key "b__" variant "__" size "__i-" icon "__s" icon px "__" name ---------- */
+[class*="st-key-b__"] button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+[class*="st-key-b__"] button p {
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  margin: 0;
+}
+[class*="st-key-b__"] button > div {
+  width: auto;
+  min-width: 0;
+}
+[class*="st-key-b__"] button:focus:not(:focus-visible) {
+  box-shadow: none;
+  outline: none;
+}
+[class*="st-key-b__"] button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+[class*="st-key-b__primary__"] button {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
+}
+[class*="st-key-b__primary__"] button:hover:not(:disabled),
+[class*="st-key-b__primary__"] button:active:not(:disabled) {
+  background: var(--primary-hover);
+  color: var(--on-primary);
+  border-color: transparent;
+}
+[class*="st-key-b__secondary__"] button {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+[class*="st-key-b__secondary__"] button:hover:not(:disabled),
+[class*="st-key-b__secondary__"] button:active:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+[class*="st-key-b__ghost"] button {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-2);
+}
+[class*="st-key-b__ghost"] button:hover:not(:disabled),
+[class*="st-key-b__ghost"] button:active:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: transparent;
+  color: var(--text);
+}
+[class*="st-key-b__ghostdanger__"] button:hover:not(:disabled) {
+  color: var(--danger);
+}
+[class*="st-key-b__danger__"] button,
+[class*="st-key-b__danger__"] button:hover:not(:disabled) {
+  background: var(--danger);
+  border-color: transparent;
+  color: #fff;
+}
+[class*="st-key-b__"][class*="__sm__"] button {
+  height: 34px;
+  min-height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+}
+[class*="st-key-b__"][class*="__lg__"] button {
+  height: 46px;
+  min-height: 46px;
+  padding: 0 20px;
+  font-size: 15px;
+}
+[class*="st-key-b__"]:not([class*="__i-none__"]) button::before {
+  content: "";
+  flex: none;
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: var(--rg-icon) center / contain no-repeat;
+  mask: var(--rg-icon) center / contain no-repeat;
+}
+[class*="__s14__"] button::before { width: 14px !important; height: 14px !important; }
+[class*="__s15__"] button::before { width: 15px !important; height: 15px !important; }
+[class*="__s16__"] button::before { width: 16px !important; height: 16px !important; }
+[class*="__s17__"] button::before { width: 17px !important; height: 17px !important; }
+[class*="__s19__"] button::before { width: 19px !important; height: 19px !important; }
+
+/* Sidebar navigation items */
+[class*="st-key-b__nav"] {
+  margin-bottom: 2px;
+}
+[class*="st-key-b__nav"] button {
+  justify-content: flex-start;
+  gap: 11px;
+  width: 100%;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  box-shadow: none;
+}
+[class*="st-key-b__nav"] button::before {
+  background-color: var(--text-3) !important;
+  transition: background-color 0.15s;
+}
+[class*="st-key-b__nav__"] button:hover,
+[class*="st-key-b__nav__"] button:active {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+[class*="st-key-b__navon__"] button,
+[class*="st-key-b__navon__"] button:hover {
+  background: var(--primary-soft);
+  color: var(--text);
+  font-weight: 600;
+}
+[class*="st-key-b__navon__"] button::before {
+  background-color: var(--primary-text) !important;
+}
+[class*="st-key-b__nav"] button > div {
+  flex: 1;
+  justify-content: flex-start;
+}
+[class*="st-key-b__nav"] button::after {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Suggested follow-up questions */
+[class*="st-key-b__sugg__"] button {
+  height: 32px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 400;
+}
+[class*="st-key-b__sugg__"] button:hover,
+[class*="st-key-b__sugg__"] button:active {
+  border-color: var(--primary);
+  color: var(--primary-text);
+  background: var(--primary-soft);
+}
+
+/* A button only the page script clicks (starts the mock's "working" run) */
+[class*="st-key-b__hidden__"] {
+  display: none !important;
+}
+
+/* An invisible button laid over a whole row (history rows) */
+[class*="st-key-b__overlay__"] {
+  position: absolute !important;
+  inset: 0;
+  z-index: 2;
+  width: 100% !important;
+  margin: 0 !important;
+}
+[class*="st-key-b__overlay__"] [data-testid="stButton"],
+[class*="st-key-b__overlay__"] button {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none;
+}
+[class*="st-key-b__overlay__"] button {
+  opacity: 0;
+}
+
+/* ---------- File pickers: an invisible Streamlit uploader over the React-styled card or button ---------- */
+[class*="st-key-upl__"] {
+  position: absolute !important;
+  inset: 0;
+  z-index: 3;
+  margin: 0 !important;
+  opacity: 0;
+  width: 100% !important;
+  height: 100%;
+  overflow: hidden;
+}
+[class*="st-key-upl__"] [data-testid="stFileUploader"],
+[class*="st-key-upl__"] [data-testid="stFileUploader"] > div,
+[class*="st-key-upl__"] section[data-testid="stFileUploaderDropzone"] {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  padding: 0;
+  cursor: pointer;
+}
+[class*="st-key-upl__"] * {
+  cursor: pointer;
+}
+.st-key-upload_wrap {
+  position: relative;
+}
+.st-key-upload_wrap:hover .upload-area {
+  border-color: var(--primary);
+}
+.st-key-upload_wrap:hover .upload-sub .link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+[class*="st-key-ovlbtn__"] {
+  position: relative;
+  width: auto;
+  flex: none;
+}
+[class*="st-key-ovlbtn__"]:hover .btn-ghost {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+[class*="st-key-ovlbtn__"]:hover .btn-secondary {
+  background: var(--surface-hover);
+}
+[class*="st-key-ovlbtn__"]:hover .icon-btn:not(.is-disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.icon-btn.is-disabled {
+  opacity: 0.45;
+}
+.st-key-upload_alt {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.st-key-upload_alt > [data-testid="stElementContainer"] {
+  width: auto;
+  flex: none;
+}
+
+/* ---------- Session ---------- */
+.st-key-stream {
+  gap: 36px;
+  flex: 1;
+}
+[class*="st-key-turn__"] {
+  gap: 12px;
+}
+[class*="st-key-turn__anim__"] {
+  animation: rise 0.35s ease both;
+}
+.turn-head {
+  position: relative;
+}
+.turn-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  scroll-margin-top: 72px;
+}
+[class*="st-key-tbody__"] {
+  padding-left: 34px;
+  min-width: 0;
+}
+[class*="st-key-fileinfo__"] {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 8px;
+}
+[class*="st-key-fileinfo__"] > [data-testid="stElementContainer"] {
+  width: auto;
+  min-width: 0;
+}
+[class*="st-key-factions__"] {
+  gap: 2px;
+  width: auto;
+  flex-wrap: nowrap;
+}
+[class*="st-key-resp__"] {
+  gap: 18px;
+}
+.response-text.last {
+  margin-bottom: 0;
+}
+[class*="st-key-rev__anim__"] {
+  animation: rise 0.45s ease both;
+}
+[class*="st-key-rev__anim__d1__"] { animation-delay: 120ms; }
+[class*="st-key-rev__anim__d2__"] { animation-delay: 280ms; }
+[class*="st-key-rev__anim__d3__"] { animation-delay: 440ms; }
+[class*="st-key-rev__anim__d4__"] { animation-delay: 600ms; }
+[class*="st-key-analyzing__"] {
+  gap: 14px;
+}
+[class*="st-key-anarow__"] {
+  align-items: center;
+  gap: 12px;
+  min-height: 34px;
+  flex-wrap: nowrap;
+}
+[class*="st-key-anarow__"] > [class*="st-key-b__"] {
+  margin-left: auto;
+}
+
+/* Image analysis card */
+[class*="st-key-viewer__"] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+[class*="st-key-vtool__"] {
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px 10px 18px;
+  border-bottom: 1px solid var(--border);
+}
+[class*="st-key-vfoot__"] {
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  min-height: 46px;
+  padding: 8px 18px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+[class*="st-key-vtool__"] > [data-testid="stElementContainer"],
+[class*="st-key-vfoot__"] > [data-testid="stElementContainer"] {
+  width: auto;
+}
+[class*="st-key-opctl__"] {
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: auto;
+  font-size: 13px;
+}
+
+/* ---------- Segmented controls (theme switch, image view, settings theme) ---------- */
+.st-key-theme_toggle [data-testid="stButtonGroup"] > div,
+[class*="st-key-segview__"] [data-testid="stButtonGroup"] > div,
+.st-key-set_theme [data-testid="stButtonGroup"] > div {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.st-key-theme_toggle button,
+[class*="st-key-segview__"] button,
+.st-key-set_theme button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 12px;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  color: var(--text-2) !important;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: none;
+  transition: background 0.15s, color 0.15s;
+}
+.st-key-theme_toggle button p,
+[class*="st-key-segview__"] button p,
+.st-key-set_theme button p {
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+}
+.st-key-theme_toggle button:hover,
+[class*="st-key-segview__"] button:hover,
+.st-key-set_theme button:hover {
+  color: var(--text) !important;
+}
+.st-key-theme_toggle button[aria-checked="true"],
+[class*="st-key-segview__"] button[aria-checked="true"],
+.st-key-set_theme button[aria-checked="true"] {
+  background: var(--surface-raised) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-sm);
+}
+.st-key-theme_toggle button {
+  width: 32px;
+  padding: 0;
+  color: var(--text-3) !important;
+}
+.st-key-theme_toggle button:hover {
+  color: var(--text) !important;
+}
+.st-key-theme_toggle button[aria-checked="true"] {
+  color: var(--primary-text) !important;
+}
+.st-key-theme_toggle button > * {
+  display: none;
+}
+.st-key-theme_toggle button::before,
+[class*="st-key-segview__"] button::before,
+.st-key-set_theme button::before {
+  content: "";
+  flex: none;
+  width: 15px;
+  height: 15px;
+  background-color: currentColor;
+  -webkit-mask: var(--rg-icon) center / contain no-repeat;
+  mask: var(--rg-icon) center / contain no-repeat;
+}
+
+/* ---------- The question box ---------- */
+[data-testid="stLayoutWrapper"]:has(> .st-key-composer_wrap) {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+.st-key-composer_wrap {
+  margin-top: 32px;
+  padding: 20px 0 18px;
+  background: linear-gradient(to top, var(--bg) 72%, transparent);
+}
+.st-key-composer {
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.st-key-composer:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.st-key-ovlbtn__attach {
+  width: 36px;
+  height: 36px;
+}
+.st-key-followup {
+  flex: 1;
+  min-width: 0;
+}
+.st-key-followup [data-testid="stChatInput"],
+.st-key-followup [data-testid="stChatInput"] > div {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 40px;
+}
+.st-key-followup [data-testid="stChatInput"] > div > div {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+}
+.st-key-followup [data-testid="stChatInput"] > div > div > div:first-child {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+.st-key-followup [data-testid="stChatInput"] > div > div > div:last-child {
+  flex: none;
+  width: auto;
+}
+.st-key-followup textarea {
+  width: 100% !important;
+}
+.st-key-followup textarea {
+  height: 40px;
+  min-height: 40px !important;
+  padding: 9px 4px !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  font-family: var(--font) !important;
+  font-size: 15px !important;
+  line-height: 22px !important;
+  caret-color: var(--text);
+}
+.st-key-followup textarea,
+.st-key-followup textarea:disabled {
+  -webkit-text-fill-color: var(--text) !important;
+}
+.st-key-followup textarea::placeholder {
+  color: var(--text-3) !important;
+  -webkit-text-fill-color: var(--text-3) !important;
+  opacity: 1;
+}
+.st-key-followup textarea:disabled {
+  cursor: not-allowed;
+}
+[data-testid="stChatInputSubmitButton"] {
+  display: inline-grid !important;
+  place-items: center;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: var(--radius) !important;
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+  transition: background 0.15s, color 0.15s;
+}
+[data-testid="stChatInputSubmitButton"]:hover:not(:disabled) {
+  background: var(--primary-hover) !important;
+}
+[data-testid="stChatInputSubmitButton"]:disabled {
+  background: var(--surface-2) !important;
+  color: var(--text-3) !important;
+  opacity: 1 !important;
+}
+[data-testid="stChatInputSubmitButton"] > * {
+  display: none !important;
+}
+[data-testid="stChatInputSubmitButton"]::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: var(--rg-icon) center / contain no-repeat;
+  mask: var(--rg-icon) center / contain no-repeat;
+}
+.st-key-suggestions {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.st-key-suggestions > [data-testid="stElementContainer"] {
+  width: auto;
+}
+
+/* ---------- Scan history ---------- */
+.st-key-history_list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+[class*="st-key-histrow__"] {
+  position: relative;
+}
+.history-btn.history-sep {
+  border-top: 1px solid var(--border);
+}
+[class*="st-key-histrow__"]:hover .history-btn {
+  background: var(--surface-2);
+}
+[class*="st-key-histrow__"]:hover .history-view {
+  border-color: var(--primary);
+  color: var(--primary-text);
+}
+.st-key-history_empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  padding: 64px 24px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+.st-key-history_empty [data-testid="stHtml"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.st-key-history_empty h2 {
+  font-size: 18px;
+}
+.st-key-history_empty [data-testid="stElementContainer"] {
+  width: auto;
+}
+.st-key-history_empty [class*="st-key-b__"] {
+  margin-top: 8px;
+}
+
+/* ---------- Settings ---------- */
+[class*="st-key-sgroup__"] {
+  margin-bottom: 28px;
+}
+.settings-group-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin: 0 0 8px 2px;
+}
+[class*="st-key-srow__"] {
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 16px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom-width: 0;
+}
+[class*="st-key-srow__first__"] {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+[class*="st-key-srow__last__"] {
+  border-bottom-width: 1px;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+[class*="st-key-srow__only__"] {
+  border-bottom-width: 1px;
+  border-radius: var(--radius-lg);
+}
+[class*="st-key-srow__"] > [data-testid="stElementContainer"],
+[class*="st-key-srow__"] > [data-testid="stLayoutWrapper"] {
+  width: auto;
+}
+[class*="st-key-srow__"] > [data-testid="stElementContainer"]:first-child {
+  flex: 1;
+  min-width: 0;
+}
+[class*="st-key-srowctl__"] {
+  gap: 6px;
+  width: auto;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+.st-key-opval {
+  gap: 10px;
+  width: auto;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+.opacity-value {
+  display: inline-block;
+  width: 36px;
+  text-align: right;
+}
+
+/* Switches */
+[class*="st-key-sw__"] label {
+  gap: 0;
+  padding: 0;
+  margin: 0;
+}
+[class*="st-key-sw__"] label > div:first-child,
+[class*="st-key-sw__"] [role="switch"] {
+  width: 40px !important;
+  height: 24px !important;
+  border-radius: 999px !important;
+  background: var(--border-strong) !important;
+  margin: 0 !important;
+}
+[class*="st-key-sw__"]:has(input:checked) label > div:first-child,
+[class*="st-key-sw__"]:has(input:checked) [role="switch"] {
+  background: var(--primary) !important;
+}
+[class*="st-key-sw__"] [data-testid="stWidgetLabel"] {
+  display: none;
+}
+
+/* Select boxes */
+[class*="st-key-sel__"] {
+  flex: none !important;
+  width: 150px !important;
+}
+[class*="st-key-sel__"] [role="group"] {
+  height: 36px;
+  min-height: 36px;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--border-strong) !important;
+  background: var(--surface) !important;
+}
+[class*="st-key-sel__"] input,
+[class*="st-key-sel__"] button {
+  height: 34px;
+  color: var(--text) !important;
+  font-family: var(--font);
+  font-size: 15px;
+}
+[class*="st-key-sel__"] input {
+  padding-left: 10px;
+}
+/* the open list of a select box */
+[role="listbox"],
+[data-baseweb="popover"] ul {
+  background: var(--surface-raised) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+}
+[role="listbox"] [role="option"] {
+  color: var(--text) !important;
+}
+[role="listbox"] [role="option"]:hover,
+[role="listbox"] [role="option"][aria-selected="true"] {
+  background: var(--surface-hover) !important;
+}
+
+/* Sliders (heatmap overlay strength) */
+[class*="st-key-sl__"] {
+  width: 120px !important;
+  flex: none;
+}
+[class*="st-key-sl__"] [data-testid="stSliderThumbValue"],
+[class*="st-key-sl__"] [data-testid="stSliderTickBar"],
+[class*="st-key-sl__"] [data-testid="stSliderTickBarMin"],
+[class*="st-key-sl__"] [data-testid="stSliderTickBarMax"] {
+  display: none;
+}
+
+/* ---------- "Take a photo" dialog ---------- */
+div[data-testid="stDialog"] {
+  background: rgba(18, 20, 19, 0.45);
+}
+div[data-testid="stDialog"] > div {
+  width: auto;
+  background: transparent;
+  box-shadow: none;
+}
+[data-testid="stDialog"] section[role="dialog"] {
+  width: min(480px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-lg);
+  animation: rise 0.2s ease both;
+}
+[data-testid="stDialog"] section[role="dialog"] > h2 {
+  display: flex;
+  align-items: center;
+  min-height: 61px;
+  padding: 12px 60px 12px 20px;
+  border-bottom: 1px solid var(--border);
+}
+[data-testid="stDialog"] section[role="dialog"] > h2 p {
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+[data-testid="stDialog"] section[role="dialog"] > button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius);
+  color: var(--text-2);
+}
+[data-testid="stDialog"] section[role="dialog"] > button:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+[data-testid="stDialog"] section[role="dialog"] > button svg {
+  display: none;
+}
+[data-testid="stDialog"] section[role="dialog"] > button::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask: var(--rg-icon) center / contain no-repeat;
+  mask: var(--rg-icon) center / contain no-repeat;
+}
+[data-testid="stDialog"] section[role="dialog"] > div {
+  padding: 0;
+}
+.st-key-dialog_body {
+  padding: 20px 20px 0;
+}
+.st-key-dialog_actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px 20px;
+}
+.st-key-dialog_actions > [data-testid="stElementContainer"],
+.st-key-dialog_actions > [data-testid="stLayoutWrapper"] {
+  width: auto;
+  flex: none;
+}
+
+/* ---------- Small screens (same breakpoints as app.css) ---------- */
+@media (max-width: 860px) {
+  [data-testid="stMainBlockContainer"] {
+    padding: 0 16px 48px;
+  }
+  .st-key-topbar {
+    margin: 0 -16px;
+    padding: 0 12px;
+  }
+  .stApp:has(section[data-testid="stSidebar"][aria-expanded="false"]) .st-key-topbar {
+    padding-left: 56px;
+    border-bottom: 1px solid var(--border);
+  }
+  .st-key-page__welcome {
+    padding-top: 28px;
+  }
+  [class*="st-key-tbody__"] {
+    padding-left: 0;
+  }
+  .st-key-stream {
+    gap: 30px;
+  }
+}
+@media (max-width: 560px) {
+  [data-testid="stHtml"] {
+    font-size: 14.5px;
+  }
+  [class*="__analyze_"],
+  [class*="__analyze_"] button {
+    width: 100%;
+  }
+  .st-key-suggestions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .st-key-dialog_actions > * {
+    flex: 1;
+  }
+  .st-key-dialog_actions button,
+  .st-key-dialog_actions .btn {
+    width: 100%;
+  }
+  [class*="st-key-srow__"] {
+    flex-wrap: wrap;
+  }
+  [class*="st-key-sl__"] {
+    width: 90px !important;
+  }
+}

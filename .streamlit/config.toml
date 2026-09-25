@@ -1,0 +1,40 @@
+# Hot-reload: auto-rerun the app whenever app.py is saved.
+# This is what makes the "edit -> save -> see it instantly" loop work.
+[server]
+runOnSave = true
+headless = true
+
+[client]
+toolbarMode = "minimal"
+
+# Colours and font copied from the React UI (web/src/styles/tokens.css). app.py switches between the
+# light and dark values itself (theme switch top-right and in Settings); these set Streamlit's own widgets.
+[theme]
+font = "Instrument Sans:https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&display=swap"
+baseRadius = "10px"
+buttonRadius = "10px"
+showSidebarBorder = true
+
+[theme.light]
+primaryColor = "#2d6a47"
+backgroundColor = "#f6f5f1"
+secondaryBackgroundColor = "#f3f2ee"
+textColor = "#1e2320"
+borderColor = "#e2e1da"
+linkColor = "#2d6a47"
+
+[theme.light.sidebar]
+backgroundColor = "#efeee9"
+secondaryBackgroundColor = "#f3f2ee"
+
+[theme.dark]
+primaryColor = "#3a7650"
+backgroundColor = "#171918"
+secondaryBackgroundColor = "#242826"
+textColor = "#ecebe6"
+borderColor = "#2f3331"
+linkColor = "#80b891"
+
+[theme.dark.sidebar]
+backgroundColor = "#131514"
+secondaryBackgroundColor = "#242826"

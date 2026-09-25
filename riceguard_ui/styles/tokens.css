@@ -1,0 +1,121 @@
+/* Design tokens — light is the default, dark overrides via [data-theme="dark"].
+ *
+ * Restrained palette: warm neutrals for surfaces, charcoal text, and one deep
+ * green used as an accent (logo, primary actions, active states, healthy).
+ */
+:root {
+  --font: "Instrument Sans", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Neutrals */
+  --bg: #f6f5f1;
+  --bg-sidebar: #efeee9;
+  --surface: #fffefc;
+  --surface-2: #f3f2ee;
+  --surface-raised: #ffffff;
+  --surface-hover: #ebeae4;
+  --border: #e2e1da;
+  --border-strong: #cecdc5;
+  --text: #1e2320;
+  --text-2: #535954;
+  --text-3: #6b716b;
+  --track: #ebeae4;
+  --knob: #ffffff;
+
+  /* Green accent */
+  --brand: #2d6a47;
+  --primary: #2d6a47;
+  --primary-hover: #245a3b;
+  --primary-soft: #e7efe8;
+  --primary-soft-2: #d5e5d8;
+  --primary-text: #2d6a47;
+  --on-primary: #ffffff;
+  --fill: #2d6a47;
+  --ring: rgba(45, 106, 71, 0.25);
+
+  /* Condition tones (legend markers, result label) */
+  --c-healthy: #4e8b5f;
+  --c-blight: #b8892c;
+  --c-blast: #6c7d8e;
+  --c-brownspot: #9a5b36;
+
+  /* Severity tones */
+  --sev-mild: #6e8b45;
+  --sev-moderate: #b7832a;
+  --sev-severe: #b5503a;
+
+  --note-bg: #f4f2ec;
+  --note-border: #e6e3da;
+  --warn-bg: #f5eedb;
+  --warn-text: #72561a;
+  --danger: #b4432f;
+
+  /* Shape */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+
+  /* Depth: low and quiet */
+  --shadow-sm: 0 1px 2px rgba(32, 32, 24, 0.06);
+  --shadow-card: 0 1px 2px rgba(32, 32, 24, 0.04);
+  --shadow: 0 1px 2px rgba(32, 32, 24, 0.04), 0 8px 24px -12px rgba(32, 32, 24, 0.16);
+  --shadow-lg: 0 24px 48px -16px rgba(32, 32, 24, 0.28);
+
+  --sidebar-w: 264px;
+  --topbar-h: 60px;
+  --content-w: 760px;
+  --content-w-wide: 1040px;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  /* Charcoal neutrals, warm white text */
+  --bg: #171918;
+  --bg-sidebar: #131514;
+  --surface: #1e2120;
+  --surface-2: #242826;
+  --surface-raised: #2c302e;
+  --surface-hover: #2a2e2c;
+  --border: #2f3331;
+  --border-strong: #3f4441;
+  --text: #ecebe6;
+  --text-2: #a9aea9;
+  --text-3: #80867f;
+  --track: #2c302e;
+  --knob: #e6e4de;
+
+  --brand: #3a7650;
+  --primary: #3a7650;
+  --primary-hover: #438459;
+  --primary-soft: rgba(110, 176, 130, 0.12);
+  --primary-soft-2: rgba(110, 176, 130, 0.2);
+  --primary-text: #80b891;
+  --on-primary: #f6f5f0;
+  --fill: #5d9a70;
+  --ring: rgba(128, 184, 145, 0.3);
+
+  --c-healthy: #74ad84;
+  --c-blight: #d0aa58;
+  --c-blast: #97a7b8;
+  --c-brownspot: #c68a5e;
+
+  --sev-mild: #9db872;
+  --sev-moderate: #d5a452;
+  --sev-severe: #d97760;
+
+  --note-bg: #222624;
+  --note-border: #303532;
+  --warn-bg: rgba(213, 164, 82, 0.1);
+  --warn-text: #dcc07a;
+  --danger: #e0705e;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px -12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 24px 48px -16px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
