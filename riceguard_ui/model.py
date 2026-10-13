@@ -23,8 +23,8 @@ MODELS = {                                   # name shown in the app: (folder in
     "ResNet50": ("resnet50", "conv5_block3_out"),
     "VGG16": ("vgg16", "block5_conv3"),
 }
-DEFAULT_MODEL = "ResNet50"                   # better Stage 1 macro F1 (0.81 vs 0.77); the thesis uses the better one
-STAGE_LABEL = "Stage 1 pilot"                # shown next to the model name until the Stage 2 models replace these
+DEFAULT_MODEL = "ResNet50"                   # better test-set macro F1 (0.68 vs 0.67, dataset v5); the thesis uses the better one
+STAGE_LABEL = "Stage 2"                      # shown next to the model name: the training run the files in models/ come from
 MODEL_CLASSES = ["Bacterial Blight", "Leaf Blast", "Brown Spot", "Healthy"]   # the notebook's CLASS_NAMES order
 IMG_SIZE = (224, 224)
 STORED_LONG_SIDE = 384                       # training photos were stored at most this size (build_photo_split.py)
