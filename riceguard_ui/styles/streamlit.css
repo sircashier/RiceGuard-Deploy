@@ -230,9 +230,12 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
   width: 100%;
   margin: 0 auto;
 }
+/* Start screen: vertically centered, sitting slightly above the middle (app.css .page-center) */
 .st-key-page__welcome {
   max-width: var(--content-w);
-  padding-top: clamp(20px, 7vh, 80px);
+  min-height: calc(100dvh - var(--topbar-h) - 72px);
+  padding: 24px 0 9vh;
+  justify-content: center;
   animation: rise 0.35s ease both;
 }
 .st-key-page__session {
@@ -1093,7 +1096,8 @@ div[data-testid="stDialog"] > div {
     border-bottom: 1px solid var(--border);
   }
   .st-key-page__welcome {
-    padding-top: 28px;
+    min-height: calc(100dvh - var(--topbar-h) - 56px);
+    padding: 16px 0 6vh;
   }
   [class*="st-key-tbody__"] {
     padding-left: 0;

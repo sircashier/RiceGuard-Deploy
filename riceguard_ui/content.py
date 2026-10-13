@@ -103,8 +103,31 @@ DEFAULT_SETTINGS = {
 TITLES = {"new-scan": "New Scan", "history": "Scan History", "about": "About", "settings": "Settings"}
 
 # ---------------------------------------------------------------------------- About page (pages/About.tsx)
-STEPS = [
-    ("Upload a leaf photo", "Take or upload a clear photo of a single rice leaf."),
+USING = [
+    ("Add a photo",
+     f"Drag a {UPLOAD['formats_label']} image (up to {UPLOAD['max_label']}) onto the upload area or click it to "
+     "browse. You can also use Take a Photo."),
+    ("Analyze it",
+     "Check that the leaf is clear and in focus, then select Analyze Image. The result appears below your photo in "
+     "the same workspace."),
+    ("Review the result",
+     "Read the detected condition, confidence, severity, highlighted areas, and treatment guidance, explained below."),
+    ("Ask follow-up questions",
+     "Use the box at the bottom to ask about the result. Finished scans are saved to Scan History so you can reopen "
+     "them."),
+]
+
+PHOTO_TIPS = [
+    "One rice leaf per photo.",
+    "Even, natural lighting, without strong shadows.",
+    "The leaf fills most of the frame and is in focus.",
+]
+
+# Shown wherever the IRRI grading is mentioned, until the grading is finished (riceguard_ui/model.py SEVERITY_CUTOFFS).
+SEVERITY_NOTE = ("This grading is not fully implemented yet: the cut-offs between Mild, Moderate, and Severe are "
+                 "provisional.")
+
+PIPELINE = [
     ("Classify the disease",
      "A CNN trained with transfer learning (VGG16 and ResNet50 are compared; the model with the better F1-score is "
      "used) classifies the leaf as Bacterial Blight, Leaf Blast, Brown Spot, or Healthy."),
@@ -113,17 +136,37 @@ STEPS = [
      "checked against visible symptoms."),
     ("Estimate severity",
      "The share of leaf area highlighted by the heatmap is mapped to Mild, Moderate, or Severe, following the IRRI "
-     "Standard Evaluation System."),
+     f"Standard Evaluation System. {SEVERITY_NOTE}"),
     ("Recommend treatment",
      "A language model turns the result into a plain-language explanation and management recommendation sourced "
      "from PhilRice guidelines."),
 ]
 
 LIMITS = [
+    "Results are a decision aid, not a confirmed diagnosis.",
     "Works on static images only; real-time video is not supported.",
     "Detects Bacterial Blight, Leaf Blast, and Brown Spot only. It cannot identify pests or nutrient deficiencies.",
     "Uses the image alone. Soil, weather, irrigation, and humidity are not considered.",
-    "Trained and tuned for Philippine rice-growing conditions.",
+    "Needs a close-up of one leaf. Wide shots of the whole plant are not read reliably.",
+]
+
+# "Reading your results": (term, explanation). The severity legend is added after the Severity entry.
+READING = [
+    ("Detection result", "The condition RiceGuard finds on the leaf. Each photo gets one result."),
+    ("Confidence",
+     "How sure the model is about that result, from 0 to 100%. A low value can mean the photo is unclear or the "
+     "symptoms are ambiguous, so try a clearer photo. Open Scores for all classes to see how the other conditions "
+     "compared."),
+    ("Severity",
+     "How much of the leaf area shows symptoms, graded on the IRRI Standard Evaluation System. It is only estimated "
+     f"when a disease is found. {SEVERITY_NOTE}"),
+    ("Highlighted areas",
+     "A Grad-CAM heatmap over your photo. Warmer colors mark the parts of the leaf that most influenced the result. "
+     "They should sit on visible symptoms; if they fall on the background, retake the photo."),
+    ("Treatment guidance",
+     "General management steps based on Philippine agricultural guidelines (PhilRice). Treat them as a starting "
+     "point, not a prescription: they don't account for your soil, weather, or irrigation. Before applying chemicals "
+     "or for serious outbreaks, check with your local agricultural office."),
 ]
 
 

@@ -60,10 +60,11 @@ def tz_offset():
 
 
 def btn(label, name, *, variant="secondary", size="md", icon=None, icon_size=18, block=False,
-        on_click=None, args=None, disabled=False):
-    """A Streamlit button drawn like the React one. The key carries the look (see streamlit.css)."""
+        on_click=None, args=None, disabled=False, hint=None):
+    """A Streamlit button drawn like the React one. The key carries the look (see streamlit.css).
+    hint: the tooltip shown on hover (the React button's title)."""
     key = f"b__{variant}__{size}__i-{icon or 'none'}__s{icon_size}__{name}"
-    return st.button(label, key=key, on_click=on_click, args=args, disabled=disabled,
+    return st.button(label, key=key, on_click=on_click, args=args, disabled=disabled, help=hint,
                      type="primary" if variant == "primary" else "secondary", width="stretch" if block else "content")
 
 
@@ -399,14 +400,17 @@ def finish_pending():
 def sidebar():
     with st.sidebar:
         html(f'<div class="sidebar-head">{views.logo()}</div>')
-        btn("New Scan", "newscan", variant="primary", icon="plus", block=True, on_click=new_scan)
-        for view, label, icon in (("new-scan", "New Scan", "scan-line"), ("history", "Scan History", "history"),
-                                  ("about", "About", "info")):
+        btn("New Scan", "newscan", variant="primary", icon="plus", block=True, on_click=new_scan,
+            hint="Start a new image analysis")
+        for view, label, icon, hint in (
+                ("new-scan", "New Scan", "scan-line", "Go to the scan workspace"),
+                ("history", "Scan History", "history", "View previous scans"),
+                ("about", "About", "info", "Learn about RiceGuard and its capabilities")):
             btn(label, f"nav_{view.replace('-', '')}", variant="navon" if ss.view == view else "nav", icon=icon,
-                block=True, on_click=navigate, args=(view,))
+                block=True, on_click=navigate, args=(view,), hint=hint)
         with st.container(key="sidebar_foot"):
             btn("Settings", "nav_settings", variant="navon" if ss.view == "settings" else "nav", icon="settings",
-                block=True, on_click=navigate, args=("settings",))
+                block=True, on_click=navigate, args=("settings",), hint="Adjust application preferences")
             html(views.version_line())
 
 
@@ -414,7 +418,7 @@ def topbar(theme: str):
     ss["theme_toggle"] = theme
     with st.container(key="topbar", horizontal=True, vertical_alignment="center"):
         html(views.topbar_left(None if ss.view == "new-scan" else TITLES[ss.view]))
-        st.segmented_control("Color theme", ["light", "dark"], key="theme_toggle", required=True,
+        st.segmented_control("Appearance", ["light", "dark"], key="theme_toggle", required=True,
                              format_func=lambda v: "Light mode" if v == "light" else "Dark mode",
                              label_visibility="collapsed", on_change=set_setting, args=("theme", "theme_toggle"))
 
@@ -438,8 +442,8 @@ def welcome_page():
         with st.container(key="upload_alt", horizontal=True, horizontal_alignment="center",
                           vertical_alignment="center"):
             html(views.divider_or())
-            btn("Take a Photo", "takephoto", icon="camera", icon_size=17, on_click=open_camera)
-        html(views.photo_tips())
+            btn("Take a Photo", "takephoto", icon="camera", icon_size=17, on_click=open_camera,
+                hint="Capture or select a photo with your camera")
 
 
 # ---------------------------------------------------------------------------- New Scan: session

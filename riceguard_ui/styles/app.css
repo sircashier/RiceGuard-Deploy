@@ -390,11 +390,15 @@ img {
   margin: 0 auto;
   width: 100%;
 }
+/* Start screen: vertically centered, sitting slightly above the middle.
+   Min-height = viewport minus top bar and .content's vertical padding. */
 .page-center {
   max-width: var(--content-w);
-  padding-top: clamp(20px, 7vh, 80px);
+  min-height: calc(100dvh - var(--topbar-h) - 72px);
+  padding: 24px 0 9vh;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: stretch;
 }
 .page-wide {
@@ -432,9 +436,10 @@ img {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 .welcome-mark {
+  display: flex;
   margin-bottom: 20px;
 }
 .welcome h1 {
@@ -442,58 +447,6 @@ img {
   font-weight: 700;
   line-height: 1.12;
   letter-spacing: -0.035em;
-}
-.welcome > p {
-  max-width: 540px;
-  margin-top: 12px;
-  color: var(--text-2);
-  font-size: 16px;
-  line-height: 1.65;
-}
-
-/* Common conditions: a plain information legend */
-.conditions {
-  width: 100%;
-  margin-top: 32px;
-}
-.conditions-title {
-  margin-bottom: 14px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-3);
-}
-.conditions-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 14px 40px;
-}
-.condition {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  text-align: left;
-}
-.condition .marker {
-  margin-top: 6px;
-}
-.condition-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-}
-.condition-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-}
-.condition-kind {
-  margin-top: 2px;
-  font-size: 12.5px;
-  color: var(--text-3);
 }
 
 /* ---------- Upload ---------- */
@@ -503,7 +456,7 @@ img {
   align-items: center;
   text-align: center;
   gap: 4px;
-  padding: 44px 24px 40px;
+  padding: 52px 24px 48px;
   border: 1px dashed var(--border-strong);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -574,22 +527,6 @@ img {
 .hint {
   font-size: 13px;
   color: var(--text-3);
-}
-.tips {
-  list-style: none;
-  padding: 0;
-  margin: 32px 0 0;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 24px;
-  font-size: 13px;
-  color: var(--text-3);
-}
-.tips li {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
 }
 
 /* ---------- Camera placeholder dialog ---------- */
@@ -970,7 +907,9 @@ img {
   font-weight: 700;
   letter-spacing: -0.03em;
 }
-.diag-kind {
+/* Small category tag (Bacterial / Fungal / No disease) */
+.tag {
+  display: inline-block;
   padding: 2px 8px;
   border-radius: var(--radius-xs);
   background: var(--surface-2);
@@ -1627,6 +1566,59 @@ input[type="range"] {
   margin-top: 8px;
 }
 .about-class-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-weight: 600;
+}
+.about-class-name .tag {
+  padding: 0 7px;
+  font-size: 11.5px;
+}
+.about-subhead {
+  margin: 24px 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+/* "Reading your results": term on its own line, explanation below */
+.terms {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.terms dt {
+  font-weight: 600;
+}
+.terms dt + dd {
+  margin: 2px 0 0;
+  color: var(--text-2);
+}
+.terms dd + dt {
+  margin-top: 18px;
+}
+.sev-legend {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+.sev-legend li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.sev-legend .marker {
+  position: relative;
+  top: -1px;
+  margin-left: 3px;
+}
+.sev-legend strong {
+  color: var(--text);
   font-weight: 600;
 }
 .steps {
@@ -1833,7 +1825,8 @@ input[type="range"] {
     gap: 30px;
   }
   .page-center {
-    padding-top: 28px;
+    min-height: calc(100dvh - var(--topbar-h) - 56px);
+    padding: 16px 0 6vh;
   }
 }
 
@@ -1841,16 +1834,8 @@ input[type="range"] {
   body {
     font-size: 14.5px;
   }
-  .conditions-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 16px;
-  }
   .upload-area {
-    padding: 36px 18px 32px;
-  }
-  .tips {
-    gap: 8px 18px;
+    padding: 40px 18px 36px;
   }
   .dialog-actions .btn {
     flex: 1;

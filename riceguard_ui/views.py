@@ -8,7 +8,8 @@ from html import escape
 from urllib.parse import quote
 
 from . import fmt
-from .content import APP, CLASS_INFO, CLASSES, LIMITS, SEVERITIES, SEVERITY_INFO, STEPS, UPLOAD
+from .content import (APP, CLASS_INFO, CLASSES, LIMITS, PHOTO_TIPS, PIPELINE, READING, SEVERITIES, SEVERITY_INFO,
+                      UPLOAD, USING)
 from .icons import svg
 
 LOGO_PATH = ("M16 26.5c0-7.5 1.2-12.6 7-17.5-.8 6.6-3 10.6-7 12.8M16 26.5c0-5.8-1.2-9.6-6.2-13.4.8 4.9 2.3 8 "
@@ -47,22 +48,15 @@ def version_line() -> str:
 
 # ---------------------------------------------------------------------------- welcome (components/scan)
 def welcome() -> str:
-    items = "".join(
-        f'<li class="condition">{marker(CLASS_INFO[c]["tone"])}<span class="condition-text">'
-        f'<span class="condition-name">{c}</span><span class="condition-kind">{CLASS_INFO[c]["kind"]}</span>'
-        f'</span></li>' for c in CLASSES)
+    """Deliberately minimal: the mark and one question. Background information lives on About."""
     return (f'<div class="welcome"><div class="welcome-mark">{logo_mark(44)}</div>'
-            f'<h1>What would you like to check?</h1>'
-            f'<p>Upload a photo of a rice leaf to get started. RiceGuard checks it for common leaf diseases, '
-            f'shows which parts of the leaf it looked at, and suggests how to manage what it finds.</p>'
-            f'<section class="conditions" aria-labelledby="conditions-title">'
-            f'<h2 id="conditions-title" class="conditions-title">Common conditions RiceGuard can identify</h2>'
-            f'<ul class="conditions-list">{items}</ul></section></div>')
+            f'<h1>What would you like to check?</h1></div>')
 
 
 def upload_card(error: bool) -> str:
     cls = "upload-area has-error" if error else "upload-area"
-    return (f'<div class="{cls}" aria-label="Upload an image. Drag and drop or press Enter to browse.">'
+    return (f'<div class="{cls}" aria-label="Upload an image. Drag and drop or press Enter to browse." '
+            f'title="Select an image from your device">'
             f'<div class="upload-icon">{svg("upload", 22, 1.8)}</div>'
             f'<div class="upload-title">Upload an image</div>'
             f'<div class="upload-sub">Drag and drop your image here or <span class="link">click to browse</span></div>'
@@ -75,12 +69,6 @@ def field_error(msg: str, extra: str = "") -> str:
 
 def divider_or() -> str:
     return '<span class="divider-text">or</span>'
-
-
-def photo_tips() -> str:
-    tips = [("leaf", "One rice leaf per photo"), ("sun", "Even, natural lighting"),
-            ("maximize", "Leaf fills most of the frame")]
-    return '<ul class="tips">' + "".join(f"<li>{svg(i, 15)}{t}</li>" for i, t in tips) + "</ul>"
 
 
 def camera_view() -> str:
@@ -202,7 +190,7 @@ def diagnosis_card(result: dict) -> str:
     info = CLASS_INFO[result["disease"]]
     healthy = result["disease"] == "Healthy"
     icon = svg("circle-check", 22, cls="diag-icon healthy") if healthy else marker(info["tone"], "lg")
-    kind = "" if healthy else f'<span class="diag-kind">{info["kind"]}</span>'
+    kind = "" if healthy else f'<span class="tag">{info["kind"]}</span>'
     probs = ""
     if result.get("probabilities"):
         probs = (f'<details class="expander"><summary>{svg("chevron-right", 16, cls="expander-icon")}'
@@ -296,11 +284,20 @@ def history_row(scan: dict, date_label: str, relative: str, first: bool) -> str:
 
 def about() -> str:
     classes = "".join(
-        f'<div class="about-class">{marker(CLASS_INFO[c]["tone"])}<div><div class="about-class-name">{c}</div>'
+        f'<div class="about-class">{marker(CLASS_INFO[c]["tone"])}<div><div class="about-class-name">{c}'
+        f'<span class="tag">{CLASS_INFO[c]["kind"]}</span></div>'
         f'<div class="muted small">{CLASS_INFO[c]["cue"]}</div></div></div>' for c in CLASSES)
-    steps = "".join(
-        f'<li><span class="step-num">{i + 1}</span><div><div class="step-title">{t}</div>'
-        f'<p class="muted">{b}</p></div></li>' for i, (t, b) in enumerate(STEPS))
+
+    def steps(items) -> str:
+        return '<ol class="steps">' + "".join(
+            f'<li><span class="step-num">{i + 1}</span><div><div class="step-title">{t}</div>'
+            f'<p class="muted">{b}</p></div></li>' for i, (t, b) in enumerate(items)) + "</ol>"
+
+    sev_legend = '<ul class="sev-legend">' + "".join(
+        f'<li>{marker(SEVERITY_INFO[s]["tone"])}<span><strong>{s}.</strong> {SEVERITY_INFO[s]["hint"]}</span></li>'
+        for s in SEVERITIES) + "</ul>"
+    terms = "".join(f'<dt>{t}</dt><dd>{b}{sev_legend if t == "Severity" else ""}</dd>' for t, b in READING)
+    tips = "".join(f"<li>{t}</li>" for t in PHOTO_TIPS)
     limits = "".join(f"<li>{l}</li>" for l in LIMITS)
     return (
         f'<header class="about-hero">{logo_mark(40)}<h1>About RiceGuard</h1><p class="lead">RiceGuard is a web '
@@ -313,11 +310,14 @@ def about() -> str:
         f'inspection is slow and error-prone. RiceGuard supports early detection while showing its reasoning, so '
         f'users can trust and verify the result.</p></section>'
         f'<section class="about-section"><h2>What it detects</h2><div class="about-classes">{classes}</div></section>'
-        f'<section class="about-section"><h2>How it works</h2><ol class="steps">{steps}</ol></section>'
+        f'<section class="about-section"><h2>Using RiceGuard</h2>{steps(USING)}'
+        f'<h3 class="about-subhead">For the best results</h3><ul class="bullets">{tips}</ul></section>'
+        f'<section class="about-section"><h2>Reading your results</h2><dl class="terms">{terms}</dl></section>'
+        f'<section class="about-section"><h2>How it works</h2>{steps(PIPELINE)}</section>'
         f'<section class="about-section"><h2>Data</h2><p>The model is trained on public rice leaf datasets '
-        f'(Mendeley Rice Leaf Disease Dataset and the Kaggle Five-Crop Diseases Dataset). It is tested on the '
-        f'Zambales Rice Dataset, a separate set of field photos from Iba and Botolan, Zambales, verified with the '
-        f'Provincial Agricultural Office.</p></section>'
+        f'(the Mendeley Rice Leaf Disease Dataset, the Kaggle Five-Crop Diseases Dataset and the Mendeley Rice Leaf '
+        f'Bacterial and Fungal Disease Dataset). It is tested on photos from the same datasets that were set apart '
+        f'before training and never used for it. Every photo of the same leaf is kept on one side.</p></section>'
         f'<section class="about-section"><h2>Limitations</h2><ul class="bullets">{limits}</ul></section>'
         f'<section class="about-section about-project"><h2>Project</h2><p class="project-title">{APP["full_title"]}</p>'
         f'<dl class="meta-grid"><dt>Type</dt><dd>{APP["degree"]}</dd><dt>Date</dt><dd>{APP["date"]}</dd>'
