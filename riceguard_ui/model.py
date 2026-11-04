@@ -1,13 +1,17 @@
 """
-The real RiceGuard pipeline: the VGG16 / ResNet50 models trained by the notebooks (tools/make_notebook.py)
--> Grad-CAM (tf-keras-vis, as named in the thesis) -> severity from the share of the leaf the heatmap covers.
+The real RiceGuard pipeline:
+photo -> leaf segmenter (U-Net, MobileNetV2 encoder) finds the outlined leaf -> leaf cut-out made like the training
+images (tools/build_final_dataset.py: box around the leaf + 5%, grey outside the leaf, long side <= 512) -> padded to
+320 x 320 -> the final VGG16 / ResNet50 model (tools/make_final_notebook.py, seed 1) -> Grad-CAM (tf-keras-vis, as
+named in the thesis) -> severity from the share of the leaf the heatmap covers.
 
-Model files: models/<folder>/model.keras next to app.py. They are only in the deploy repo (RiceGuard-Deploy);
-the main repo ignores *.keras. TensorFlow is imported only when a model is used, so the app still runs with the
-mock results (riceguard_ui/mock.py) wherever TensorFlow or the model files are missing.
+Model files: models/<folder>/model.keras (+ preprocessing.json / segmenter.json) next to app.py. They are only in the
+deploy repo (RiceGuard-Deploy); the main repo ignores *.keras. TensorFlow is imported only when a model is used, so
+the app still runs with the mock results (riceguard_ui/mock.py) wherever TensorFlow or the model files are missing.
 """
 import importlib.util
 import io
+import json
 import math
 import sys
 from functools import lru_cache
@@ -24,14 +28,20 @@ MODELS = {                                   # name shown in the app: (folder in
     "ResNet50": ("resnet50", "conv5_block3_out"),
     "VGG16": ("vgg16", "block5_conv3"),
 }
-DEFAULT_MODEL = "ResNet50"                   # better test-set macro F1 (0.68 vs 0.67, dataset v5); the thesis uses the better one
-STAGE_LABEL = "Stage 2"                      # shown next to the model name: the training run the files in models/ come from
+# Seed-1 models had the better macro F1 with VGG16, both on the true cut-outs of the test set (0.863 vs 0.855) and
+# through this app pipeline (0.870 vs 0.836, riceguard results/app_check/segmenter/segmenter_check.json).
+DEFAULT_MODEL = "VGG16"
+STAGE_LABEL = "Final"                        # shown next to the model name: the training run the files in models/ come from
 MODEL_CLASSES = ["Bacterial Blight", "Leaf Blast", "Brown Spot", "Healthy"]   # the notebook's CLASS_NAMES order
-IMG_SIZE = (224, 224)
-STORED_LONG_SIDE = 384                       # training photos were stored at most this size (build_photo_split.py)
+SEGMENTER = "segmenter"                      # folder in models/
+STORED_LONG_SIDE = 1024                      # uploads are kept at most this size (the app pipeline check used 1024)
 
-# Severity = share of the LEAF (plain paper/mat background left out, same rule as the notebook's shortcut checks)
-# where the Grad-CAM heat is at least HEAT_THRESHOLD.
+# Classifier input (models/<folder>/preprocessing.json) and leaf cut-out (models/segmenter/segmenter.json); these
+# defaults are the values the final models were trained with.
+CLS_SIZE, GREY = 320, (124, 116, 104)
+SEG_SIZE, SEG_THRESHOLD, MIN_PART, CUT_MARGIN, CUT_LONG = 320, 0.5, 0.05, 0.05, 512
+
+# Severity = share of the LEAF (the segmenter's outline) where the Grad-CAM heat is at least HEAT_THRESHOLD.
 HEAT_THRESHOLD = 0.5
 # Per-disease cut-offs (thesis Chapter III, Table 4). The manuals use whole percents, so severity_of() rounds first.
 #   Bacterial Blight: Mild <= 24%, Moderate 25-50%, Severe > 50%  (PhilRice Rice Breeding Operations Manual, p. 79)
@@ -45,6 +55,9 @@ SEVERITY_CUTOFFS = {            # (highest whole % still Mild, highest whole % s
 
 
 def _files() -> list:
+    """Classifiers whose file is present. They are only usable together with the leaf segmenter."""
+    if not (MODELS_DIR / SEGMENTER / "model.keras").is_file():
+        return []
     return [n for n, (folder, _) in MODELS.items() if (MODELS_DIR / folder / "model.keras").is_file()]
 
 
@@ -89,8 +102,14 @@ def _preprocess_layer():
     return BackbonePreprocess
 
 
+def _settings(folder: str, name: str) -> dict:
+    path = MODELS_DIR / folder / name
+    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+
+
 def load(name: str):
-    """(model, Grad-CAM) for one model. Slow (seconds); app.py caches it with st.cache_resource."""
+    """(model, Grad-CAM, layer, input settings) for one classifier. Slow (seconds); app.py caches it with
+    st.cache_resource."""
     import keras
     from tf_keras_vis.gradcam import Gradcam
 
@@ -100,43 +119,105 @@ def load(name: str):
     # Grad-CAM on the score before softmax (the notebook's ReplaceToLinear), via the logits layer. This shares the
     # weights instead of cloning the whole model, which keeps memory low on Streamlit Cloud.
     scores = keras.Model(model.inputs, model.get_layer("logits").output)
-    return model, Gradcam(scores, clone=False), layer
+    pre = _settings(folder, "preprocessing.json")
+    return model, Gradcam(scores, clone=False), layer, (pre.get("size", CLS_SIZE), tuple(pre.get("grey", GREY)))
+
+
+@lru_cache(maxsize=1)
+def _segmenter():
+    """The leaf segmenter (one per server, shared by both classifiers) and its settings."""
+    import keras
+
+    return (keras.models.load_model(MODELS_DIR / SEGMENTER / "model.keras", compile=False),
+            _settings(SEGMENTER, "segmenter.json"))
 
 
 def stored_photo(data: bytes) -> bytes:
-    """An upload as a training photo was stored: upright, at most 384 px, JPEG. Needs only Pillow (runs on upload).
+    """An upload ready for the pipeline: upright, at most 1024 px, JPEG. Needs only Pillow (runs on upload).
     A JPEG that is already like that is kept byte for byte."""
     img = Image.open(io.BytesIO(data))
     if img.format == "JPEG" and img.getexif().get(0x0112, 1) == 1 and max(img.size) <= STORED_LONG_SIDE:
         return data
     img = ImageOps.exif_transpose(img).convert("RGB")
-    img.thumbnail((STORED_LONG_SIDE, STORED_LONG_SIDE), Image.LANCZOS)   # as tools/build_photo_split.py did
+    img.thumbnail((STORED_LONG_SIDE, STORED_LONG_SIDE), Image.LANCZOS)
     buf = io.BytesIO()
     img.save(buf, "JPEG", quality=92)
     return buf.getvalue()
 
 
+def _fit(w: int, h: int, size: int):
+    """Size and offset that put a w x h picture in the middle of a size x size square (the notebooks' "pad")."""
+    s = size / max(w, h)
+    nw, nh = max(1, round(w * s)), max(1, round(h * s))
+    return nw, nh, (size - nw) // 2, (size - nh) // 2
+
+
+def _pad(img: Image.Image, size: int, grey) -> np.ndarray:
+    nw, nh, ox, oy = _fit(*img.size, size)
+    canvas = Image.new("RGB", (size, size), grey)
+    canvas.paste(img.resize((nw, nh), Image.BILINEAR), (ox, oy))
+    return np.asarray(canvas, np.float32)
+
+
+def leaf_mask(img: Image.Image) -> np.ndarray | None:
+    """The outlined leaf (or leaves) at the photo's own size, as found by the segmenter; specks are dropped.
+    None when no leaf is found."""
+    from scipy import ndimage
+
+    seg, cfg = _segmenter()
+    size, grey = cfg.get("input_size", SEG_SIZE), tuple(cfg.get("grey", GREY))
+    w, h = img.size
+    nw, nh, ox, oy = _fit(w, h, size)
+    p = seg(_pad(img, size, grey)[None], training=False).numpy()[0, ..., 0]
+    p = np.asarray(Image.fromarray(p[oy:oy + nh, ox:ox + nw]).resize((w, h), Image.BILINEAR))
+    mask = p > cfg.get("threshold", SEG_THRESHOLD)
+    parts, n = ndimage.label(mask)
+    if n == 0:
+        return None
+    sizes = ndimage.sum(mask, parts, range(1, n + 1))
+    return np.isin(parts, 1 + np.where(sizes >= cfg.get("min_part", MIN_PART) * sizes.sum())[0])
+
+
+def cut_out(img: Image.Image, mask: np.ndarray, grey):
+    """The leaf cut-out the classifiers were trained on (tools/build_final_dataset.py): box around the leaf + 5%,
+    grey outside the leaf, long side at most 512. Also returns the box, to put the heatmap back on the photo."""
+    w, h = img.size
+    ys, xs = np.where(mask)
+    x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
+    mx, my = (x1 - x0) * CUT_MARGIN, (y1 - y0) * CUT_MARGIN
+    box = (max(0, int(x0 - mx)), max(0, int(y0 - my)), min(w, int(np.ceil(x1 + mx))), min(h, int(np.ceil(y1 + my))))
+    cut = Image.composite(img, Image.new("RGB", (w, h), grey), Image.fromarray(mask.astype(np.uint8) * 255)).crop(box)
+    s = min(1.0, CUT_LONG / max(cut.size))
+    if s < 1:
+        cut = cut.resize((round(cut.size[0] * s), round(cut.size[1] * s)), Image.LANCZOS)
+    return cut, box
+
+
 def predict(loaded, stored: bytes) -> dict:
-    """Class probabilities and the Grad-CAM heatmap (224x224, 0-1) for the predicted class.
-    The photo is read exactly like image_dataset_from_directory read training photos: TensorFlow's JPEG decoder,
-    then a bilinear resize to 224x224 (Pillow decodes JPEGs slightly differently, enough to flip close calls)."""
-    import tensorflow as tf
+    """Class probabilities, plus the Grad-CAM heatmap (0-1) and the leaf mask, both at the photo's size.
+    The heatmap is computed on the leaf cut-out and put back where the leaf is; outside the leaf it is 0."""
     from tf_keras_vis.utils.scores import CategoricalScore
 
-    model, gradcam, layer = loaded
-    x = tf.image.resize(tf.io.decode_jpeg(stored, channels=3), IMG_SIZE, method="bilinear").numpy()
+    model, gradcam, layer, (size, grey) = loaded
+    img = Image.open(io.BytesIO(stored)).convert("RGB")
+    w, h = img.size
+    mask = leaf_mask(img)
+    found = mask is not None
+    if not found:                                   # no leaf found: classify the whole photo, as the check did
+        mask = np.ones((h, w), bool)
+        cut, box = img, (0, 0, w, h)
+    else:
+        cut, box = cut_out(img, mask, grey)
+    x = _pad(cut, size, grey)
     probs = model(x[None], training=False).numpy()[0]
     top = int(probs.argmax())
-    cam = np.asarray(gradcam(CategoricalScore([top]), x[None], penultimate_layer=layer)).reshape(IMG_SIZE)
-    return {"probs": probs, "top": top, "cam": cam, "x": x}
-
-
-def leaf_mask(x: np.ndarray) -> np.ndarray:
-    """True where the pixel is NOT plain background (light, low-saturation paper or mat), as in the notebook."""
-    rgb = x / 255.0
-    mx, mn = rgb.max(-1), rgb.min(-1)
-    sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-8), 0)
-    return ~((sat < 0.18) & (mx > 0.55))
+    cam = np.asarray(gradcam(CategoricalScore([top]), x[None], penultimate_layer=layer)).reshape(size, size)
+    nw, nh, ox, oy = _fit(*cut.size, size)
+    heat = np.zeros((h, w), np.float32)
+    heat[box[1]:box[3], box[0]:box[2]] = np.asarray(
+        Image.fromarray(cam[oy:oy + nh, ox:ox + nw].astype(np.float32)).resize((box[2] - box[0], box[3] - box[1]),
+                                                                              Image.BILINEAR))
+    return {"probs": probs, "top": top, "cam": np.clip(heat, 0, 1) * mask, "mask": mask, "leaf_found": found}
 
 
 def severity_of(disease: str, affected_pct: float) -> str:
@@ -164,7 +245,7 @@ def result(name: str, out: dict, size, lang: str = "English") -> dict:
     if disease == "Healthy":
         severity, affected = None, 0.0
     else:
-        leaf = leaf_mask(out["x"])
+        leaf = out["mask"]
         hot = out["cam"] >= HEAT_THRESHOLD
         affected = round(100.0 * (hot & leaf).sum() / max(1, leaf.sum()), 1)
         severity = severity_of(disease, affected)

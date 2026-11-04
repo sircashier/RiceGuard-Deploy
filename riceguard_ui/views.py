@@ -1,6 +1,5 @@
 """
-HTML for the static parts of the RiceGuard UI, copied from the React components in web/src/components
-and web/src/pages (same markup and class names, styled by the same app.css). Interactive parts
+HTML for the static parts of the RiceGuard UI, styled by riceguard_ui/styles/app.css. Interactive parts
 (buttons, uploads, switches, sliders, the question box) are Streamlit widgets placed around these.
 """
 import re
@@ -46,7 +45,7 @@ def version_line() -> str:
     return f'<div class="version">{APP["name"]} v{APP["version"]} · {APP["stage"]}</div>'
 
 
-# ---------------------------------------------------------------------------- welcome (components/scan)
+# ---------------------------------------------------------------------------- welcome
 def welcome() -> str:
     """Deliberately minimal: the mark and one question. Background information lives on About."""
     return (f'<div class="welcome"><div class="welcome-mark">{logo_mark(44)}</div>'
@@ -79,7 +78,7 @@ def camera_view() -> str:
 
 
 def fake_button(label: str, icon: str, icon_size: int, cls: str) -> str:
-    """Looks exactly like the React button; a transparent Streamlit file picker sits on top of it."""
+    """Looks like a .btn button; a transparent Streamlit file picker sits on top of it."""
     ic = svg(icon, icon_size) if icon else ""
     return f'<span class="btn {cls}" role="presentation">{ic}{escape(label)}</span>'
 
@@ -88,7 +87,7 @@ def fake_icon_button(icon: str, icon_size: int, extra: str = "") -> str:
     return f'<span class="icon-btn {extra}" role="presentation">{svg(icon, icon_size)}</span>'
 
 
-# ---------------------------------------------------------------------------- session (components/session)
+# ---------------------------------------------------------------------------- session
 def turn_head(who: str, note: str, anchor: str) -> str:
     avatar = logo_mark(24) if who == "riceguard" else f'<span class="you-avatar" aria-hidden="true">{svg("user-round", 14)}</span>'
     n = f'<span class="turn-note">{escape(note)}</span>' if note else ""
@@ -142,7 +141,7 @@ def thinking() -> str:
     return f'<div class="analyzing-row">{analyzing_label("Thinking about your question…")}</div>'
 
 
-# ---------------------------------------------------------------------------- results (components/results)
+# ---------------------------------------------------------------------------- results
 def lead_in(result: dict) -> str:
     if result["disease"] == "Healthy":
         text = ("I've finished analyzing your image. This leaf looks healthy. I didn't find signs of Bacterial "

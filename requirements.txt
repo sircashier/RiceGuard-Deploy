@@ -9,6 +9,7 @@ numpy          # mock heatmap + sample leaf drawings (riceguard_ui/mock.py)
 tensorflow-cpu==2.21.0; python_version < "3.14"
 keras==3.15.1; python_version < "3.14"
 tf-keras-vis==0.8.7; python_version < "3.14"
+scipy; python_version < "3.14"          # leaf mask clean-up (riceguard_ui/model.py leaf_mask)
 
 # --- Training only (Colab notebooks), not needed by the app ---
 # opencv-python-headless

@@ -1,1 +1,1 @@
-"""RiceGuard Streamlit UI — a copy of the React design in web/ (see app.py)."""
+"""RiceGuard Streamlit UI (see app.py)."""

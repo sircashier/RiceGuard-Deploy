@@ -1,0 +1,19 @@
+{
+  "fit": "pad",
+  "size": 320,
+  "grey": [
+    124,
+    116,
+    104
+  ],
+  "class_names": [
+    "Bacterial_Blight",
+    "Leaf_Blast",
+    "Brown_Spot",
+    "Healthy"
+  ],
+  "model": "resnet50",
+  "seed": 1,
+  "input": "leaf cut-out (outside the outline filled with grey), RGB 0-255",
+  "source_file": "/content/drive/MyDrive/RiceGuard/riceguard_results/resnet50/final/final/T3-A/seed1/model.keras"
+}

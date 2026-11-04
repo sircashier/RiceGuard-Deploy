@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Streamlit layer: makes Streamlit's own page and widgets look like the React UI in web/.
-   tokens.css (colours, radii, shadows) and app.css (the React styles, copied unchanged) load first.
+   Streamlit layer: makes Streamlit's own page and widgets match the RiceGuard design in app.css.
+   tokens.css (colours, radii, shadows) and app.css (the component styles) load first.
    Widgets are found by the key app.py gives them — Streamlit adds the class "st-key-" + key.
    (Never write an angle bracket in this file: Streamlit drops a style block that contains one.)
    ========================================================================== */
@@ -46,7 +46,7 @@
   line-height: 1.6;
   color: var(--text);
 }
-/* Streamlit indents lists and sets paragraphs/lists to 1rem; the React styles expect plain elements */
+/* Streamlit indents lists and sets paragraphs/lists to 1rem; the app.css styles expect plain elements */
 [data-testid="stHtml"] ul,
 [data-testid="stHtml"] ol,
 [data-testid="stHtml"] dl {
@@ -79,7 +79,7 @@ header[data-testid="stHeader"] button {
   max-width: none;
   padding: 0 24px 64px;
 }
-/* No automatic gaps between elements: each container below sets the React spacing itself. */
+/* No automatic gaps between elements: each container below sets its own spacing. */
 [data-testid="stVerticalBlock"],
 [data-testid="stHorizontalBlock"] {
   gap: 0;
@@ -164,7 +164,7 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
   border-top: 1px solid var(--border);
 }
 
-/* Streamlit's collapse / open-sidebar buttons, drawn as the React icon buttons */
+/* Streamlit's collapse / open-sidebar buttons, drawn as the app's icon buttons */
 [data-testid="stSidebarCollapseButton"] button,
 [data-testid="stExpandSidebarButton"],
 [data-testid="stExpandSidebarButton"] button {
@@ -183,8 +183,12 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
   background: var(--surface-hover);
   color: var(--text);
 }
+/* Hide Streamlit's own icon with its wrapper: the empty wrapper still took a grid row and pushed the drawn icon
+   to the top of the button. */
 [data-testid="stSidebarCollapseButton"] [data-testid="stIconMaterial"],
-[data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"] {
+[data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"],
+[data-testid="stSidebarCollapseButton"] button > span:has([data-testid="stIconMaterial"]),
+[data-testid="stExpandSidebarButton"] > span:has([data-testid="stIconMaterial"]) {
   display: none;
 }
 [data-testid="stSidebarCollapseButton"] button::before,
@@ -214,11 +218,12 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
   flex-wrap: nowrap;
   gap: 12px;
 }
-.stApp:has(section[data-testid="stSidebar"][aria-expanded="false"]) .st-key-topbar {
+/* Sidebar state: aria-expanded in older Streamlit versions, data-collapsed in newer ones (1.66) */
+.stApp:has(section[data-testid="stSidebar"]:is([aria-expanded="false"], [data-collapsed="true"])) .st-key-topbar {
   padding-left: 64px;
 }
 /* the small logo in the top bar is only for when the sidebar is closed (phones) */
-.stApp:has(section[data-testid="stSidebar"][aria-expanded="true"]) .topbar-left .only-mobile {
+.stApp:has(section[data-testid="stSidebar"]:is([aria-expanded="true"], [data-collapsed="false"])) .topbar-left .only-mobile {
   display: none !important;
 }
 .st-key-topbar [data-testid="stElementContainer"]:has(.topbar-left) {
@@ -452,7 +457,7 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
   opacity: 0;
 }
 
-/* ---------- File pickers: an invisible Streamlit uploader over the React-styled card or button ---------- */
+/* ---------- File pickers: an invisible Streamlit uploader over the HTML card or button ---------- */
 [class*="st-key-upl__"] {
   position: absolute !important;
   inset: 0;
@@ -684,8 +689,17 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
 .st-key-theme_toggle button[aria-checked="true"] {
   color: var(--primary-text) !important;
 }
+/* The "Light mode" / "Dark mode" labels stay readable to screen readers (display: none removed the buttons' names) */
+.st-key-theme_toggle button {
+  position: relative;
+}
 .st-key-theme_toggle button > * {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 .st-key-theme_toggle button::before,
 [class*="st-key-segview__"] button::before,
@@ -1082,6 +1096,37 @@ div[data-testid="stDialog"] > div {
   flex: none;
 }
 
+/* ---------- Tooltips (the hint= text on buttons; Streamlit draws them in a layer above the page) ---------- */
+/* Streamlit puts -16px under the tooltip text to cancel the paragraph's 1rem bottom margin, but app.css sets
+   p { margin: 0 }, so the box came out shorter than its text and clipped it. */
+div[data-testid="stTooltipContent"] [data-testid="stMarkdownContainer"] {
+  margin-bottom: 0;
+}
+/* pointer-events: none lets clicks pass through to the button under a tooltip (e.g. About's tooltip covers
+   Scan History); otherwise the tooltip caught the click and stayed open while the pointer was over it. */
+div[data-testid="stTooltipContent"] {
+  pointer-events: none;
+  max-width: min(280px, calc(100vw - 24px));
+  padding: 5px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-family: var(--font);
+}
+div[data-testid="stTooltipContent"] p {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text);
+}
+/* No hover on touch screens: a tapped button's tooltip would stay stuck over the page */
+@media (hover: none) {
+  div:has(> [data-testid="stTooltipContent"]) {
+    display: none !important;
+  }
+}
+
 /* ---------- Small screens (same breakpoints as app.css) ---------- */
 @media (max-width: 860px) {
   [data-testid="stMainBlockContainer"] {
@@ -1091,7 +1136,7 @@ div[data-testid="stDialog"] > div {
     margin: 0 -16px;
     padding: 0 12px;
   }
-  .stApp:has(section[data-testid="stSidebar"][aria-expanded="false"]) .st-key-topbar {
+  .stApp:has(section[data-testid="stSidebar"]:is([aria-expanded="false"], [data-collapsed="true"])) .st-key-topbar {
     padding-left: 56px;
     border-bottom: 1px solid var(--border);
   }

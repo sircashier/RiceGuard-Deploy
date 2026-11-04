@@ -1,0 +1,15 @@
+{
+  "input_size": 320,
+  "fit": "pad",
+  "grey": [
+    124,
+    116,
+    104
+  ],
+  "threshold": 0.5,
+  "min_part": 0.05,
+  "cut_margin": 0.05,
+  "cut_long": 512,
+  "input": "whole photo, RGB 0-255",
+  "output": "probability of outlined leaf per pixel"
+}

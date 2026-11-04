@@ -1,4 +1,4 @@
-"""Formatting helpers, same output as web/src/services/format.ts (en-US, the viewer's own time zone)."""
+"""Formatting helpers (en-US, the viewer's own time zone)."""
 from datetime import datetime, timedelta, timezone
 
 

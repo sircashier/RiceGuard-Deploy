@@ -1,4 +1,4 @@
-"""Lucide icons (lucide-react v1.47.0, ISC license) used by the React UI in web/, copied as SVG markup."""
+"""Lucide icons (from lucide-react v1.47.0, ISC license), copied as SVG markup."""
 from urllib.parse import quote
 
 ICONS = {

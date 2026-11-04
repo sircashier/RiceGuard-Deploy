@@ -1,7 +1,6 @@
 """
-RiceGuard wording and settings, copied from the React UI in web/src
-(config/riceguard.ts, data/mockResults.ts, data/mockHistory.ts, pages/About.tsx, services/followUp.ts,
-services/analysis.ts explain()). Keep the two in sync if either changes.
+RiceGuard wording and settings: classes, treatments, severity labels, mock results and history, About page text,
+explanations and follow-up answers. This is the only copy (the React prototype it came from has been removed).
 """
 import re
 
@@ -70,7 +69,7 @@ SEVERITY_INFO = {
     "Severe": {"hint": "Advanced. Prioritize treatment for this area.", "tone": "var(--sev-severe)"},
 }
 
-# MOCK detection results for frontend testing — one per class (web/src/data/mockResults.ts).
+# MOCK detection results for frontend testing — one per class.
 MOCK_RESULTS = {
     "Bacterial Blight": {"disease": "Bacterial Blight", "confidence": 0.96, "severity": "Severe", "affected_pct": 62.4},
     "Leaf Blast": {"disease": "Leaf Blast", "confidence": 0.92, "severity": "Moderate", "affected_pct": 23.6},
@@ -78,7 +77,7 @@ MOCK_RESULTS = {
     "Healthy": {"disease": "Healthy", "confidence": 0.97, "severity": None, "affected_pct": 0.0},
 }
 
-# MOCK scan history (web/src/data/mockHistory.ts).
+# MOCK scan history.
 MOCK_HISTORY = [
     {"preset": MOCK_RESULTS["Brown Spot"], "name": "field_iba_0412.jpg", "hours_ago": 2, "seed": 11},
     {"preset": MOCK_RESULTS["Healthy"], "name": "leaf_plot3_morning.jpg", "hours_ago": 5, "seed": 23},
@@ -97,12 +96,12 @@ DEFAULT_SETTINGS = {
     "explanation_language": "English",
     "save_history": True,
     "mock_result": "Random",
-    "model": "ResNet50",       # used when the trained models are installed (riceguard_ui/model.py)
+    "model": "VGG16",          # used when the trained models are installed; keep equal to model.py DEFAULT_MODEL
 }
 
 TITLES = {"new-scan": "New Scan", "history": "Scan History", "about": "About", "settings": "Settings"}
 
-# ---------------------------------------------------------------------------- About page (pages/About.tsx)
+# ---------------------------------------------------------------------------- About page
 USING = [
     ("Add a photo",
      f"Drag a {UPLOAD['formats_label']} image (up to {UPLOAD['max_label']}) onto the upload area or click it to "
@@ -171,7 +170,7 @@ READING = [
 ]
 
 
-# ---------------------------------------------------------------------------- Explanations (services/analysis.ts)
+# ---------------------------------------------------------------------------- Explanations
 def explain(disease: str, severity, affected_pct: float, lang: str = "English") -> str:
     pct = int(affected_pct + 0.5)
     if disease == "Healthy":
@@ -185,7 +184,7 @@ def explain(disease: str, severity, affected_pct: float, lang: str = "English") 
             f"which RiceGuard rates as {severity}.")
 
 
-# ---------------------------------------------------------------------------- Follow-up (services/followUp.ts)
+# ---------------------------------------------------------------------------- Follow-up
 SPREAD = {
     "Bacterial Blight": "Bacterial Blight spreads through irrigation water and wind-driven rain, so keep the field "
                         "well drained and avoid working among wet plants.",

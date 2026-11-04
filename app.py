@@ -1,8 +1,9 @@
 """
-RiceGuard — Streamlit app.
+RiceGuard — Streamlit app. This is the only RiceGuard interface: make all UI changes here and in riceguard_ui/.
+(It began as a copy of a React prototype in web/, which has been removed.)
 
-A copy of the React UI in web/ (same screens, wording, colours and flow), built in Streamlit so the whole
-app — model, Grad-CAM, severity and LLM — can later run as one Python program on Streamlit Community Cloud.
+Built in Streamlit so the whole app — model, Grad-CAM, severity and LLM — can run as one Python program on
+Streamlit Community Cloud.
 
 Analysis uses the trained VGG16 / ResNet50 models with Grad-CAM (riceguard_ui/model.py) when their files are in
 models/ and TensorFlow is installed (the deploy repo). Otherwise it falls back to the MOCK results
@@ -61,8 +62,8 @@ def tz_offset():
 
 def btn(label, name, *, variant="secondary", size="md", icon=None, icon_size=18, block=False,
         on_click=None, args=None, disabled=False, hint=None):
-    """A Streamlit button drawn like the React one. The key carries the look (see streamlit.css).
-    hint: the tooltip shown on hover (the React button's title)."""
+    """A Streamlit button drawn like the app's .btn buttons. The key carries the look (see streamlit.css).
+    hint: the tooltip shown on hover."""
     key = f"b__{variant}__{size}__i-{icon or 'none'}__s{icon_size}__{name}"
     return st.button(label, key=key, on_click=on_click, args=args, disabled=disabled, help=hint,
                      type="primary" if variant == "primary" else "secondary", width="stretch" if block else "content")
@@ -149,7 +150,7 @@ def real_result(img: dict, lang: str) -> dict:
 
 
 def mock_history() -> list:
-    """MOCK scan history for the Scan History page (web/src/data/mockHistory.ts)."""
+    """MOCK scan history for the Scan History page (content.MOCK_HISTORY)."""
     t0 = now()
     scans = []
     for i, s in enumerate(MOCK_HISTORY):
@@ -193,7 +194,7 @@ def last_done():
     return next((t for t in reversed(ss.turns) if t["kind"] == "analysis" and t["status"] == "done"), None)
 
 
-# ============================================================================ actions (App.tsx)
+# ============================================================================ actions
 def to_selected_image(name: str, data: bytes, mime: str):
     """Validate a file and read its dimensions. Returns an image or an error message."""
     if mime not in UPLOAD["accept"]:
@@ -345,7 +346,7 @@ def busy() -> bool:
 
 
 def finish_pending():
-    """Finish the analysis / answer shown as "in progress" (the mock waits like the React one).
+    """Finish the analysis / answer shown as "in progress" (the mock waits briefly so the loading state shows).
 
     Two runs: the first only draws the "Analyzing…" state and ends, so Streamlit clears the buttons that
     no longer apply; a hidden button, clicked by the page, then starts the run that does the work."""
@@ -424,7 +425,7 @@ def topbar(theme: str):
 
 
 def file_picker(label: str, key_name: str, target, disabled: bool = False):
-    """An invisible Streamlit uploader laid over the React-styled card / button drawn just before it."""
+    """An invisible Streamlit uploader laid over the HTML card / button drawn just before it."""
     key = f"upl__{key_name}_{ss.upload_n}"
     st.file_uploader(label, key=key, label_visibility="collapsed", disabled=disabled,
                      max_upload_size=UPLOAD["max_bytes"] // (1024 * 1024), on_change=on_upload, args=(key, target))
@@ -726,7 +727,7 @@ def camera_dialog():
 
 
 def scripts():
-    """Small page scripts: scroll to the newest step (like the React session) and close the phone menu."""
+    """Small page scripts: scroll to the newest step and close the phone menu."""
     out = []
     if ss.scroll_to:
         target = ss.scroll_to
@@ -741,9 +742,10 @@ def scripts():
                 "var t=setInterval(function(){if(go()||++n>40)clearInterval(t);},50);})();" % target)
     if ss.close_sidebar:
         ss.close_sidebar = False
+        # Open sidebar: aria-expanded=true in older Streamlit versions, data-collapsed=false in newer ones (1.66).
         out.append("if(matchMedia('(max-width: 860px)').matches&&document.querySelector("
-                   "'section[data-testid=stSidebar][aria-expanded=true]')){var b=document.querySelector("
-                   "'[data-testid=stSidebarCollapseButton] button');b&&b.click();}")
+                   "'section[data-testid=stSidebar]:is([aria-expanded=true],[data-collapsed=false])')){"
+                   "var b=document.querySelector('[data-testid=stSidebarCollapseButton] button');b&&b.click();}")
     if out:
         st.html(f"<script>/*{uid()}*/{''.join(out)}</script>", unsafe_allow_javascript=True)
 

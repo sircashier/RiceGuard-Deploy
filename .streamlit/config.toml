@@ -7,7 +7,7 @@ headless = true
 [client]
 toolbarMode = "minimal"
 
-# Colours and font copied from the React UI (web/src/styles/tokens.css). app.py switches between the
+# Colours and font match riceguard_ui/styles/tokens.css. app.py switches between the
 # light and dark values itself (theme switch top-right and in Settings); these set Streamlit's own widgets.
 [theme]
 font = "Instrument Sans:https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&display=swap"

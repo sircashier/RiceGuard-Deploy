@@ -1,7 +1,7 @@
 """
-MOCK pipeline, ported from the React UI (web/src/services: random.ts, heatmap.ts, sampleLeaves.ts, analysis.ts).
-Nothing here runs a model: it returns preset results, a fake Grad-CAM heatmap and drawn sample leaves so the
-interface can be designed. Replace build_mock_result() with the real VGG16/ResNet50 + Grad-CAM + LLM pipeline.
+MOCK pipeline. Nothing here runs a model: it returns preset results, a fake Grad-CAM heatmap and drawn sample
+leaves so the interface can be designed. Replace build_mock_result() with the real VGG16/ResNet50 + Grad-CAM + LLM
+pipeline.
 """
 import io
 import math
@@ -13,9 +13,9 @@ from PIL import Image, ImageDraw, ImageFilter
 from .content import CLASS_INFO, CLASSES, MOCK_RESULTS, explain
 
 
-# ---------------------------------------------------------------------------- random.ts
+# ---------------------------------------------------------------------------- random
 def seeded(seed: int):
-    """Small seeded PRNG (mulberry32), same sequence as the React mock so the pictures match."""
+    """Small seeded PRNG (mulberry32), so the same seed always draws the same picture."""
     state = [seed & 0xFFFFFFFF]
 
     def imul(a, b):
@@ -48,7 +48,7 @@ def _jpeg(img: Image.Image, quality: int = 85) -> bytes:
     return buf.getvalue()
 
 
-# ---------------------------------------------------------------------------- heatmap.ts
+# ---------------------------------------------------------------------------- heatmap
 def _jet(t: np.ndarray) -> np.ndarray:
     """Classic "jet" colormap, t in [0,1] -> RGB 0..255."""
     c = lambda x: np.clip(x, 0, 1)
@@ -80,7 +80,7 @@ def mock_heatmap(width: int, height: int, seed: int, blobs: int = 4) -> bytes:
     return _jpeg(out, 85)
 
 
-# ---------------------------------------------------------------------------- sampleLeaves.ts
+# ---------------------------------------------------------------------------- sample leaves
 def slug(disease: str) -> str:
     return disease.lower().replace(" ", "-")
 
@@ -231,7 +231,7 @@ def sample_leaf_file():
     return sample_file_name(disease), draw_sample_leaf(disease, random.randrange(1_000_000))
 
 
-# ---------------------------------------------------------------------------- analysis.ts (mock part)
+# ---------------------------------------------------------------------------- mock results
 def build_mock_result(preset: dict, seed: int, size, lang: str = "English") -> dict:
     """Build a full mock result from a preset. Same keys the real pipeline will return."""
     disease, confidence = preset["disease"], preset["confidence"]

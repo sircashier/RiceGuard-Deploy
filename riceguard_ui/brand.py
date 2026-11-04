@@ -1,4 +1,4 @@
-"""The RiceGuard mark as a PNG (browser-tab icon), drawn like the SVG favicon in web/index.html."""
+"""The RiceGuard mark as a PNG (browser-tab icon), drawn like logo_mark() in views.py."""
 from PIL import Image, ImageDraw
 
 from .mock import _cubic
