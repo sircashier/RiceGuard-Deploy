@@ -8,6 +8,7 @@ mock results (riceguard_ui/mock.py) wherever TensorFlow or the model files are m
 """
 import importlib.util
 import io
+import math
 import sys
 from functools import lru_cache
 from pathlib import Path
@@ -32,9 +33,15 @@ STORED_LONG_SIDE = 384                       # training photos were stored at mo
 # Severity = share of the LEAF (plain paper/mat background left out, same rule as the notebook's shortcut checks)
 # where the Grad-CAM heat is at least HEAT_THRESHOLD.
 HEAT_THRESHOLD = 0.5
-# PLACEHOLDER cut-offs until the thesis fixes its own: IRRI SES lesion-area scale (bacterial blight) grouped as
-# score 1-3 (up to 12%) -> Mild, 5 (13-25%) -> Moderate, 7-9 (over 25%) -> Severe.
-SEVERITY_CUTOFFS = ((12.0, "Mild"), (25.0, "Moderate"))
+# Per-disease cut-offs (thesis Chapter III, Table 4). The manuals use whole percents, so severity_of() rounds first.
+#   Bacterial Blight: Mild <= 24%, Moderate 25-50%, Severe > 50%  (PhilRice Rice Breeding Operations Manual, p. 79)
+#   Leaf Blast:       Mild < 4%,   Moderate 4-25%,  Severe > 25%  (PhilRice manual, p. 77; IRRI SES, p. 15)
+#   Brown Spot:       Mild <= 5%,  Moderate 6-25%,  Severe > 25%  (IRRI Standard Evaluation System, p. 13)
+SEVERITY_CUTOFFS = {            # (highest whole % still Mild, highest whole % still Moderate); above -> Severe
+    "Bacterial Blight": (24, 50),
+    "Leaf Blast": (3, 25),
+    "Brown Spot": (5, 25),
+}
 
 
 def _files() -> list:
@@ -132,8 +139,15 @@ def leaf_mask(x: np.ndarray) -> np.ndarray:
     return ~((sat < 0.18) & (mx > 0.55))
 
 
-def severity_of(affected_pct: float) -> str:
-    return next((label for cut, label in SEVERITY_CUTOFFS if affected_pct <= cut), "Severe")
+def severity_of(disease: str, affected_pct: float) -> str:
+    # Round half up (round() is banker's rounding: 24.5 -> 24 but 25.5 -> 26).
+    pct = math.floor(affected_pct + 0.5)
+    mild, moderate = SEVERITY_CUTOFFS[disease]
+    if pct <= mild:
+        return "Mild"
+    if pct <= moderate:
+        return "Moderate"
+    return "Severe"
 
 
 def heatmap_jpeg(cam: np.ndarray, size) -> bytes:
@@ -153,7 +167,7 @@ def result(name: str, out: dict, size, lang: str = "English") -> dict:
         leaf = leaf_mask(out["x"])
         hot = out["cam"] >= HEAT_THRESHOLD
         affected = round(100.0 * (hot & leaf).sum() / max(1, leaf.sum()), 1)
-        severity = severity_of(affected)
+        severity = severity_of(disease, affected)
     return {
         "disease": disease,
         "confidence": float(out["probs"][out["top"]]),

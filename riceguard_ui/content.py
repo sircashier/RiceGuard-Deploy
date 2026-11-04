@@ -72,9 +72,9 @@ SEVERITY_INFO = {
 
 # MOCK detection results for frontend testing — one per class (web/src/data/mockResults.ts).
 MOCK_RESULTS = {
-    "Bacterial Blight": {"disease": "Bacterial Blight", "confidence": 0.96, "severity": "Severe", "affected_pct": 41.8},
+    "Bacterial Blight": {"disease": "Bacterial Blight", "confidence": 0.96, "severity": "Severe", "affected_pct": 62.4},
     "Leaf Blast": {"disease": "Leaf Blast", "confidence": 0.92, "severity": "Moderate", "affected_pct": 23.6},
-    "Brown Spot": {"disease": "Brown Spot", "confidence": 0.89, "severity": "Mild", "affected_pct": 8.4},
+    "Brown Spot": {"disease": "Brown Spot", "confidence": 0.89, "severity": "Mild", "affected_pct": 3.6},
     "Healthy": {"disease": "Healthy", "confidence": 0.97, "severity": None, "affected_pct": 0.0},
 }
 
@@ -86,7 +86,7 @@ MOCK_HISTORY = [
     {"preset": MOCK_RESULTS["Bacterial Blight"], "name": "botolan_row7.png", "hours_ago": 50, "seed": 41},
     {"preset": {**MOCK_RESULTS["Brown Spot"], "confidence": 0.84, "severity": "Moderate", "affected_pct": 21.5},
      "name": "IMG_20260918_1604.jpg", "hours_ago": 96, "seed": 58},
-    {"preset": {**MOCK_RESULTS["Leaf Blast"], "confidence": 0.87, "severity": "Mild", "affected_pct": 11.2},
+    {"preset": {**MOCK_RESULTS["Leaf Blast"], "confidence": 0.87, "severity": "Mild", "affected_pct": 2.4},
      "name": "sample_leaf_12.webp", "hours_ago": 170, "seed": 63},
 ]
 
@@ -123,9 +123,10 @@ PHOTO_TIPS = [
     "The leaf fills most of the frame and is in focus.",
 ]
 
-# Shown wherever the IRRI grading is mentioned, until the grading is finished (riceguard_ui/model.py SEVERITY_CUTOFFS).
-SEVERITY_NOTE = ("This grading is not fully implemented yet: the cut-offs between Mild, Moderate, and Severe are "
-                 "provisional.")
+# Shown wherever the severity grading is mentioned. The per-disease cut-offs are in riceguard_ui/model.py
+# SEVERITY_CUTOFFS (thesis Chapter III, Table 4).
+# Both sentences it follows already name the PhilRice and IRRI manuals, so it doesn't repeat them.
+SEVERITY_NOTE = "The cut-offs differ by disease. The affected area is estimated from the heatmap, not measured."
 
 PIPELINE = [
     ("Classify the disease",
@@ -135,8 +136,8 @@ PIPELINE = [
      "Grad-CAM produces a heatmap of the leaf regions that most influenced the result, so the prediction can be "
      "checked against visible symptoms."),
     ("Estimate severity",
-     "The share of leaf area highlighted by the heatmap is mapped to Mild, Moderate, or Severe, following the IRRI "
-     f"Standard Evaluation System. {SEVERITY_NOTE}"),
+     "The share of leaf area highlighted by the heatmap is mapped to Mild, Moderate, or Severe, following the PhilRice "
+     f"Rice Breeding Operations Manual and the IRRI Standard Evaluation System. {SEVERITY_NOTE}"),
     ("Recommend treatment",
      "A language model turns the result into a plain-language explanation and management recommendation sourced "
      "from PhilRice guidelines."),
@@ -158,8 +159,8 @@ READING = [
      "symptoms are ambiguous, so try a clearer photo. Open Scores for all classes to see how the other conditions "
      "compared."),
     ("Severity",
-     "How much of the leaf area shows symptoms, graded on the IRRI Standard Evaluation System. It is only estimated "
-     f"when a disease is found. {SEVERITY_NOTE}"),
+     "How much of the leaf area shows symptoms, graded on the PhilRice Rice Breeding Operations Manual and the IRRI "
+     f"Standard Evaluation System. It is only estimated when a disease is found. {SEVERITY_NOTE}"),
     ("Highlighted areas",
      "A Grad-CAM heatmap over your photo. Warmer colors mark the parts of the leaf that most influenced the result. "
      "They should sit on visible symptoms; if they fall on the background, retake the photo."),
