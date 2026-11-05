@@ -32,7 +32,9 @@ MODELS = {                                   # name shown in the app: (folder in
 # through this app pipeline (0.870 vs 0.836, riceguard results/app_check/segmenter/segmenter_check.json).
 DEFAULT_MODEL = "VGG16"
 STAGE_LABEL = "Final"                        # shown next to the model name: the training run the files in models/ come from
-MODEL_CLASSES = ["Bacterial Blight", "Leaf Blast", "Brown Spot", "Healthy"]   # the notebook's CLASS_NAMES order
+# The notebook's CLASS_NAMES order (the model's output index). The notebooks and dataset call class 0 "Bacterial
+# Blight"; the app shows "Bacterial Leaf Blight", the name the validating plant pathologist asked for.
+MODEL_CLASSES = ["Bacterial Leaf Blight", "Leaf Blast", "Brown Spot", "Healthy"]
 SEGMENTER = "segmenter"                      # folder in models/
 STORED_LONG_SIDE = 1024                      # uploads are kept at most this size (the app pipeline check used 1024)
 
@@ -44,11 +46,11 @@ SEG_SIZE, SEG_THRESHOLD, MIN_PART, CUT_MARGIN, CUT_LONG = 320, 0.5, 0.05, 0.05, 
 # Severity = share of the LEAF (the segmenter's outline) where the Grad-CAM heat is at least HEAT_THRESHOLD.
 HEAT_THRESHOLD = 0.5
 # Per-disease cut-offs (thesis Chapter III, Table 4). The manuals use whole percents, so severity_of() rounds first.
-#   Bacterial Blight: Mild <= 24%, Moderate 25-50%, Severe > 50%  (PhilRice Rice Breeding Operations Manual, p. 79)
-#   Leaf Blast:       Mild < 4%,   Moderate 4-25%,  Severe > 25%  (PhilRice manual, p. 77; IRRI SES, p. 15)
-#   Brown Spot:       Mild <= 5%,  Moderate 6-25%,  Severe > 25%  (IRRI Standard Evaluation System, p. 13)
+#   Bacterial Leaf Blight: Mild <= 24%, Moderate 25-50%, Severe > 50%  (PhilRice Rice Breeding Operations Manual, p. 79)
+#   Leaf Blast:            Mild < 4%,   Moderate 4-25%,  Severe > 25%  (PhilRice manual, p. 77; IRRI SES, p. 15)
+#   Brown Spot:            Mild <= 5%,  Moderate 6-25%,  Severe > 25%  (IRRI Standard Evaluation System, p. 13)
 SEVERITY_CUTOFFS = {            # (highest whole % still Mild, highest whole % still Moderate); above -> Severe
-    "Bacterial Blight": (24, 50),
+    "Bacterial Leaf Blight": (24, 50),
     "Leaf Blast": (3, 25),
     "Brown Spot": (5, 25),
 }

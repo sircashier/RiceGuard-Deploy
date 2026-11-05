@@ -972,6 +972,10 @@ section[data-testid="stSidebar"][aria-expanded="true"] {
   flex: none !important;
   width: 150px !important;
 }
+/* the mock-result list holds the longest option ("Bacterial Leaf Blight") */
+.st-key-sel__mock {
+  width: 200px !important;
+}
 [class*="st-key-sel__"] [role="group"] {
   height: 36px;
   min-height: 36px;

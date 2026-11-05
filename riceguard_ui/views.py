@@ -145,7 +145,7 @@ def thinking() -> str:
 def lead_in(result: dict) -> str:
     if result["disease"] == "Healthy":
         text = ("I've finished analyzing your image. This leaf looks healthy. I didn't find signs of Bacterial "
-                "Blight, Leaf Blast, or Brown Spot.")
+                "Leaf Blight, Leaf Blast, or Brown Spot.")
     else:
         text = f'I\'ve finished analyzing your image. I found signs of <strong>{result["disease"]}</strong> on this leaf:'
     tag = preview_tag("Mock result · detection model not connected yet") if result.get("is_mock") else ""
@@ -305,7 +305,7 @@ def about() -> str:
         f'recommends how to manage it.</p></header>'
         f'<section class="about-section"><h2>Why it matters</h2><p>Rice provides about half of the daily energy '
         f'intake of Filipinos, and pests and diseases cause an estimated 37% yield loss for rice farmers each year. '
-        f'Brown Spot, Leaf Blast, and Bacterial Blight look alike and are hard to tell apart by eye, and manual '
+        f'Brown Spot, Leaf Blast, and Bacterial Leaf Blight look alike and are hard to tell apart by eye, and manual '
         f'inspection is slow and error-prone. RiceGuard supports early detection while showing its reasoning, so '
         f'users can trust and verify the result.</p></section>'
         f'<section class="about-section"><h2>What it detects</h2><div class="about-classes">{classes}</div></section>'

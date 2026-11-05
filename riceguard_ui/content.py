@@ -23,41 +23,73 @@ UPLOAD = {
     "max_label": "200 MB",
 }
 
-CLASSES = ["Bacterial Blight", "Leaf Blast", "Brown Spot", "Healthy"]
+CLASSES = ["Bacterial Leaf Blight", "Leaf Blast", "Brown Spot", "Healthy"]
 SEVERITIES = ["Mild", "Moderate", "Severe"]
 
+# Descriptions and treatments follow "RiceGuard Severity and Treatment Reference.docx" (Files and Links): management
+# lists in section 4 (PhilRice and IRRI sources), lesion descriptions from the validating pathologist (8.3), residue
+# plowed under rather than burned (8.2), and no fungicide product or variety names (4.4, 8.1).
+# The app shows each treatment sentence as one bullet, so every practice is its own sentence.
 CLASS_INFO = {
-    "Bacterial Blight": {
+    "Bacterial Leaf Blight": {
         "kind": "Bacterial",
-        "cue": "Yellowing along the leaf margins.",
-        "about": "Bacterial Blight is caused by bacteria. It usually starts as water-soaked streaks along the leaf "
-                 "edges that turn yellow and then dry out, and it spreads through water and wind-driven rain.",
-        "treatment": "Use certified disease-free seeds and resistant varieties. Avoid excess nitrogen; ensure good "
-                     "field drainage. Remove infected debris.",
+        "cue": "Yellowing that starts at the leaf tip and runs down the edges.",
+        "about": "Bacterial Leaf Blight is caused by bacteria. It usually starts at the leaf tip as water-soaked to "
+                 "yellowish stripes that run down the leaf edges, turn yellow to gray, and dry out. It spreads "
+                 "through water, wind and rain.",
+        "treatment": "Plant resistant varieties; they are the most effective and economical control. "
+                     "Use healthy or treated seed. "
+                     "Avoid high nitrogen and apply fertilizer at the proper rate. "
+                     "Keep seedbeds and fields from flooding: keep about 2 to 3 cm of water, use shallow water in "
+                     "nursery beds, and drain the field during severe flooding. "
+                     "Use proper plant spacing and avoid injuring plants during transplanting. "
+                     "Keep the field clean by removing weeds, ratoons and volunteer seedlings, and destroy infected "
+                     "plant residues. "
+                     "After harvest, plow under the stubble and straw and let the fallow field dry thoroughly. "
+                     "Chemical sprays are not recommended, since copper compounds, antibiotics and other chemicals "
+                     "have not proven highly effective against this disease.",
         "tone": "var(--c-blight)",
     },
     "Leaf Blast": {
         "kind": "Fungal",
-        "cue": "Grayish lesions on the leaf blade.",
-        "about": "Leaf Blast is caused by a fungus. It forms diamond-shaped lesions with gray centers and brown edges, "
-                 "and it spreads quickly through airborne spores in humid weather.",
-        "treatment": "Apply recommended fungicide at early lesion stage. Avoid drought stress and over-fertilizing "
-                     "with nitrogen. Use resistant varieties.",
+        "cue": "Spindle-shaped lesions with gray centers.",
+        "about": "Leaf Blast is caused by a fungus. It forms spindle-shaped lesions with gray centers and brown "
+                 "margins, and it spreads quickly through airborne spores in humid weather.",
+        "treatment": "Plant resistant varieties. "
+                     "Sow healthy, disease-free seed early, after the rainy season starts. "
+                     "Avoid dense planting: use proper plant spacing, and transplant rather than broadcast. "
+                     "Avoid excess nitrogen and apply it in small, split doses. "
+                     "Keep the field from drying out, since drought stress makes plants more susceptible. "
+                     "Apply silicate fertilizer with compost, especially on soils low in silicon. "
+                     "Avoid working in the field while the plants are wet. "
+                     "Plow under rice stubble and infected residue right after harvest. "
+                     "Before heading, check the leaf collars regularly for blast. "
+                     "Use fungicide only when needed, as a last option: choose one recommended by your local "
+                     "agricultural office or PhilRice and follow the label.",
         "tone": "var(--c-blast)",
     },
     "Brown Spot": {
         "kind": "Fungal",
-        "cue": "Brown lesions scattered across the leaf.",
-        "about": "Brown Spot is caused by a fungus. It forms small, round brown spots across the leaf and is often "
-                 "linked to poor soil nutrition, especially low potassium.",
-        "treatment": "Correct soil nutrient deficiency (especially potassium). Treat seeds and apply fungicide if "
-                     "severe. Improve water management.",
+        "cue": "Circular to oval dark brown spots.",
+        "about": "Brown Spot is caused by a fungus. It forms small, circular to oval dark brown spots, often with a "
+                 "light gray center, and is often linked to poor soil nutrition, especially low phosphorus and "
+                 "potassium.",
+        "treatment": "Plant resistant varieties. "
+                     "Don't use seed harvested from a paddy infected with Brown Spot. "
+                     "Treat seed before planting with a seed-treatment fungicide recommended by your local "
+                     "agricultural office or PhilRice. "
+                     "Apply balanced nitrogen, phosphorus and potassium, following the Leaf Color Chart (LCC) and "
+                     "Minus-One Element Technique (MOET) recommendations. "
+                     "Apply calcium silicate and compost. "
+                     "Keep good water management and correct other stress in the field. "
+                     "Prepare and level the field well before planting. "
+                     "Destroy stubble and weeds that carry the fungus.",
         "tone": "var(--c-brownspot)",
     },
     "Healthy": {
         "kind": "No disease",
         "cue": "No visible disease symptoms.",
-        "about": "No signs of Bacterial Blight, Leaf Blast, or Brown Spot were found on this leaf.",
+        "about": "No signs of Bacterial Leaf Blight, Leaf Blast, or Brown Spot were found on this leaf.",
         "treatment": "No disease detected. Continue regular monitoring and good field practices.",
         "tone": "var(--c-healthy)",
     },
@@ -71,7 +103,7 @@ SEVERITY_INFO = {
 
 # MOCK detection results for frontend testing — one per class.
 MOCK_RESULTS = {
-    "Bacterial Blight": {"disease": "Bacterial Blight", "confidence": 0.96, "severity": "Severe", "affected_pct": 62.4},
+    "Bacterial Leaf Blight": {"disease": "Bacterial Leaf Blight", "confidence": 0.96, "severity": "Severe", "affected_pct": 62.4},
     "Leaf Blast": {"disease": "Leaf Blast", "confidence": 0.92, "severity": "Moderate", "affected_pct": 23.6},
     "Brown Spot": {"disease": "Brown Spot", "confidence": 0.89, "severity": "Mild", "affected_pct": 3.6},
     "Healthy": {"disease": "Healthy", "confidence": 0.97, "severity": None, "affected_pct": 0.0},
@@ -82,7 +114,7 @@ MOCK_HISTORY = [
     {"preset": MOCK_RESULTS["Brown Spot"], "name": "field_iba_0412.jpg", "hours_ago": 2, "seed": 11},
     {"preset": MOCK_RESULTS["Healthy"], "name": "leaf_plot3_morning.jpg", "hours_ago": 5, "seed": 23},
     {"preset": MOCK_RESULTS["Leaf Blast"], "name": "IMG_20260921_0931.jpg", "hours_ago": 27, "seed": 37},
-    {"preset": MOCK_RESULTS["Bacterial Blight"], "name": "botolan_row7.png", "hours_ago": 50, "seed": 41},
+    {"preset": MOCK_RESULTS["Bacterial Leaf Blight"], "name": "botolan_row7.png", "hours_ago": 50, "seed": 41},
     {"preset": {**MOCK_RESULTS["Brown Spot"], "confidence": 0.84, "severity": "Moderate", "affected_pct": 21.5},
      "name": "IMG_20260918_1604.jpg", "hours_ago": 96, "seed": 58},
     {"preset": {**MOCK_RESULTS["Leaf Blast"], "confidence": 0.87, "severity": "Mild", "affected_pct": 2.4},
@@ -130,7 +162,7 @@ SEVERITY_NOTE = "The cut-offs differ by disease. The affected area is estimated 
 PIPELINE = [
     ("Classify the disease",
      "A CNN trained with transfer learning (VGG16 and ResNet50 are compared; the model with the better F1-score is "
-     "used) classifies the leaf as Bacterial Blight, Leaf Blast, Brown Spot, or Healthy."),
+     "used) classifies the leaf as Bacterial Leaf Blight, Leaf Blast, Brown Spot, or Healthy."),
     ("Show where it looked",
      "Grad-CAM produces a heatmap of the leaf regions that most influenced the result, so the prediction can be "
      "checked against visible symptoms."),
@@ -145,7 +177,7 @@ PIPELINE = [
 LIMITS = [
     "Results are a decision aid, not a confirmed diagnosis.",
     "Works on static images only; real-time video is not supported.",
-    "Detects Bacterial Blight, Leaf Blast, and Brown Spot only. It cannot identify pests or nutrient deficiencies.",
+    "Detects Bacterial Leaf Blight, Leaf Blast, and Brown Spot only. It cannot identify pests or nutrient deficiencies.",
     "Uses the image alone. Soil, weather, irrigation, and humidity are not considered.",
     "Needs a close-up of one leaf. Wide shots of the whole plant are not read reliably.",
 ]
@@ -175,7 +207,7 @@ def explain(disease: str, severity, affected_pct: float, lang: str = "English") 
     pct = int(affected_pct + 0.5)
     if disease == "Healthy":
         if lang == "Filipino":
-            return "Walang nakitang palatandaan ng Bacterial Blight, Leaf Blast, o Brown Spot sa dahong ito."
+            return "Walang nakitang palatandaan ng Bacterial Leaf Blight, Leaf Blast, o Brown Spot sa dahong ito."
         return f"{CLASS_INFO['Healthy']['about']} Keep monitoring the field, since early symptoms can be small."
     if lang == "Filipino":
         return (f"May palatandaan ng {disease} ang dahon. Ang mga naka-highlight na bahagi ay sumasaklaw sa "
@@ -186,12 +218,12 @@ def explain(disease: str, severity, affected_pct: float, lang: str = "English") 
 
 # ---------------------------------------------------------------------------- Follow-up
 SPREAD = {
-    "Bacterial Blight": "Bacterial Blight spreads through irrigation water and wind-driven rain, so keep the field "
-                        "well drained and avoid working among wet plants.",
-    "Leaf Blast": "Leaf Blast spreads through airborne spores, especially in humid weather, so avoid excess nitrogen "
-                  "and don't let the field dry out.",
-    "Brown Spot": "Brown Spot carries over through infected seeds and crop residue, so use clean seeds and correct "
-                  "soil nutrients, especially potassium.",
+    "Bacterial Leaf Blight": "Bacterial Leaf Blight spreads through water, wind and rain, and plant injuries make infection "
+                        "easier, so keep the field from flooding and avoid injuring plants during transplanting.",
+    "Leaf Blast": "Leaf Blast spreads through airborne spores, especially in humid weather, so avoid excess nitrogen, "
+                  "don't let the field dry out, and avoid working among wet plants.",
+    "Brown Spot": "Brown Spot carries over through infected seeds, stubble and weeds, so use clean seed, destroy "
+                  "stubble and weeds, and keep soil nutrients balanced, especially phosphorus and potassium.",
 }
 
 
@@ -202,11 +234,12 @@ def mock_answer(question: str, r) -> str:
         return "Upload a leaf photo and run an analysis first, then ask me about the result."
     if r["disease"] == "Healthy":
         if re.search(r"detect|identify|disease", q):
-            return ("RiceGuard can identify Bacterial Blight, Leaf Blast, and Brown Spot, or tell you a leaf looks "
+            return ("RiceGuard can identify Bacterial Leaf Blight, Leaf Blast, and Brown Spot, or tell you a leaf looks "
                     "healthy. It can't detect pests or nutrient deficiencies.")
         if re.search(r"watch|look for|sign|symptom", q):
-            return ("Watch for yellowing along the leaf edges (Bacterial Blight), gray diamond-shaped lesions (Leaf "
-                    "Blast), and small brown spots (Brown Spot). Scan the leaf again if you see any of these.")
+            return ("Watch for yellowing that starts at the leaf tip and runs down the edges (Bacterial Leaf Blight), "
+                    "spindle-shaped lesions with gray centers (Leaf Blast), and circular to oval dark brown spots "
+                    "(Brown Spot). Scan the leaf again if you see any of these.")
         return ("Keep the field healthy with certified seeds, balanced fertilizer (avoid excess nitrogen), and good "
                 "water management. Check your plants regularly and scan again if you notice spots or yellowing.")
     if re.search(r"spread|stop|prevent|contain", q):
@@ -220,11 +253,16 @@ def mock_answer(question: str, r) -> str:
         return ("Resistant varieties differ by region and season. Ask your local agricultural office or PhilRice "
                 "which varieties are recommended for your area.")
     if re.search(r"fungicide|spray|chemical|pesticide", q):
-        if r["disease"] == "Bacterial Blight":
-            return ("Fungicides don't work on Bacterial Blight because it's caused by bacteria. Focus on resistant "
+        if r["disease"] == "Bacterial Leaf Blight":
+            return ("Fungicides don't work on Bacterial Leaf Blight because it's caused by bacteria. Focus on resistant "
                     "varieties, balanced nitrogen, good drainage, and removing infected plant debris.")
-        return ("Use only fungicides recommended by your local agricultural office or PhilRice, and follow the label "
-                "for dose and timing. Apply early, when lesions first appear.")
+        if r["disease"] == "Brown Spot":
+            return ("For Brown Spot, fungicide is recommended as a seed treatment before planting, together with "
+                    "balanced fertilization and clean seed. Use only fungicides recommended by your local "
+                    "agricultural office or PhilRice, and follow the label.")
+        return ("For Leaf Blast, use fungicide only when needed, as a last option after resistant varieties and good "
+                "crop management. Use only fungicides recommended by your local agricultural office or PhilRice, and "
+                "follow the label.")
     return (f"For this {r['disease']} result, start with the recommended management steps above. Detailed answers "
             "will come from RiceGuard's explanation service once it's connected.")
 

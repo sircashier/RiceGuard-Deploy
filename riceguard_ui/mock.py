@@ -199,7 +199,7 @@ def draw_sample_leaf(disease: str, seed: int, w: int = 640, h: int = 480) -> byt
             pts = [P(px, py) for px, py in shape]
             over(lambda d, pts=pts: (d.polygon(pts, fill=_hex("#b9b6a6")),
                                      d.line(pts + [pts[0]], fill=_hex("#6b4a2a"), width=3 * S, joint="curve")))
-    elif disease == "Bacterial Blight":
+    elif disease == "Bacterial Leaf Blight":
         band = _gradient_rows(LH, oy - W * S, oy + W * S,
                               [(0, (232, 214, 120, 242)), (0.35, (214, 196, 110, 153)), (0.55, (0, 0, 0, 0)),
                                (1, (0, 0, 0, 0))])

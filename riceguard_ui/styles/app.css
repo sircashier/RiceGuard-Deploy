@@ -1070,7 +1070,7 @@ img {
 }
 .probs li {
   display: grid;
-  grid-template-columns: 136px 1fr 52px;
+  grid-template-columns: 160px 1fr 52px;  /* fits "Bacterial Leaf Blight" on one line */
   align-items: center;
   gap: 12px;
   font-size: 13.5px;
@@ -1887,7 +1887,7 @@ input[type="range"] {
     flex-wrap: wrap;
   }
   .probs li {
-    grid-template-columns: 122px 1fr 48px;
+    grid-template-columns: 160px 1fr 48px;
   }
   .opacity-control input {
     width: 90px;
