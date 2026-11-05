@@ -1,2 +1,2 @@
 # RiceGuard-Deploy
-https://wastewise-app.streamlit.app/
+https://riceguarddemo.streamlit.app/
