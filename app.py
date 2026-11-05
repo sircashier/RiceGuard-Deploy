@@ -26,8 +26,8 @@ from PIL import Image, ImageOps
 from riceguard_ui import fmt, views
 from riceguard_ui import model as pipeline
 from riceguard_ui.brand import favicon
-from riceguard_ui.content import (APP, CLASS_INFO, CLASSES, DEFAULT_SETTINGS, MOCK_HISTORY, TITLES, UPLOAD, mock_answer,
-                                  suggestions_for)
+from riceguard_ui.content import (APP, CLASS_INFO, CLASSES, DEFAULT_SETTINGS, MOCK_HISTORY, NO_LEAF, TITLES, UPLOAD,
+                                  mock_answer, suggestions_for)
 from riceguard_ui.icons import ICONS, mask_url
 from riceguard_ui.mock import build_mock_result, draw_sample_leaf, hash_string, pick_mock, sample_leaf_file
 
@@ -141,9 +141,12 @@ def _model(name: str):
     return pipeline.load(name)
 
 
-def real_result(img: dict, lang: str) -> dict:
+def real_result(img: dict, lang: str) -> dict | None:
+    """The trained models' result, or None when no leaf was found in the photo."""
     name = ss.settings["model"] if ss.settings["model"] in MODELS else MODELS[0]
     out = pipeline.predict(_model(name), img["model_input"])
+    if not out["leaf_found"]:
+        return None
     r = pipeline.result(name, out, (img["width"] or 800, img["height"] or 600), lang)
     r["heatmap"] = data_uri(r["heatmap"], "image/jpeg")
     return r
@@ -378,6 +381,10 @@ def finish_pending():
                 t.update(status="error", error="I couldn't analyze this image. Try another photo.")
                 ss.pending = None
                 st.rerun()
+            if result is None:                  # no leaf in the photo: say so instead of guessing a disease
+                t.update(status="no_leaf")
+                ss.pending = None
+                st.rerun()
         else:
             preset, ss.last_mock = pick_mock(img["name"], ss.settings["mock_result"], ss.last_mock)
             seed = hash_string(f"{img['name']}:{img['size']}:{int(time.time() * 1000)}")
@@ -503,6 +510,9 @@ def analysis_turn(t: dict):
         with st.container(key=f"resp__{tid}"):
             html(views.notice_error(t.get("error") or "I couldn't analyze this image."))
             btn("Try again", f"retry_{tid}", icon="refresh-cw", icon_size=16, on_click=analyze, args=(tid,))
+    elif status == "no_leaf":
+        with st.container(key=f"resp__{tid}"):
+            html(views.notice_error(NO_LEAF))
     elif t.get("result"):
         results(t)
 

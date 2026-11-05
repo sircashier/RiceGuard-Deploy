@@ -197,19 +197,17 @@ def cut_out(img: Image.Image, mask: np.ndarray, grey):
 
 def predict(loaded, stored: bytes) -> dict:
     """Class probabilities, plus the Grad-CAM heatmap (0-1) and the leaf mask, both at the photo's size.
-    The heatmap is computed on the leaf cut-out and put back where the leaf is; outside the leaf it is 0."""
+    The heatmap is computed on the leaf cut-out and put back where the leaf is; outside the leaf it is 0.
+    When the segmenter finds no leaf, only {"leaf_found": False} is returned: the photo is not classified."""
     from tf_keras_vis.utils.scores import CategoricalScore
 
     model, gradcam, layer, (size, grey) = loaded
     img = Image.open(io.BytesIO(stored)).convert("RGB")
     w, h = img.size
     mask = leaf_mask(img)
-    found = mask is not None
-    if not found:                                   # no leaf found: classify the whole photo, as the check did
-        mask = np.ones((h, w), bool)
-        cut, box = img, (0, 0, w, h)
-    else:
-        cut, box = cut_out(img, mask, grey)
+    if mask is None:
+        return {"leaf_found": False}
+    cut, box = cut_out(img, mask, grey)
     x = _pad(cut, size, grey)
     probs = model(x[None], training=False).numpy()[0]
     top = int(probs.argmax())
@@ -219,7 +217,7 @@ def predict(loaded, stored: bytes) -> dict:
     heat[box[1]:box[3], box[0]:box[2]] = np.asarray(
         Image.fromarray(cam[oy:oy + nh, ox:ox + nw].astype(np.float32)).resize((box[2] - box[0], box[3] - box[1]),
                                                                               Image.BILINEAR))
-    return {"probs": probs, "top": top, "cam": np.clip(heat, 0, 1) * mask, "mask": mask, "leaf_found": found}
+    return {"probs": probs, "top": top, "cam": np.clip(heat, 0, 1) * mask, "mask": mask, "leaf_found": True}
 
 
 def severity_of(disease: str, affected_pct: float) -> str:

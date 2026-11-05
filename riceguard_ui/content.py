@@ -159,6 +159,9 @@ PHOTO_TIPS = [
 # Both sentences it follows already name the PhilRice and IRRI manuals, so it doesn't repeat them.
 SEVERITY_NOTE = "The cut-offs differ by disease. The affected area is estimated from the heatmap, not measured."
 
+# Shown instead of a result when the leaf segmenter finds no leaf in the photo (riceguard_ui/model.py predict).
+NO_LEAF = "No leaf detected. Upload a close-up photo of a single rice leaf."
+
 PIPELINE = [
     ("Classify the disease",
      "A CNN trained with transfer learning (VGG16 and ResNet50 are compared; the model with the better F1-score is "
