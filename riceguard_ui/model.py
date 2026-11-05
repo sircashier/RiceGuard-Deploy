@@ -42,6 +42,11 @@ STORED_LONG_SIDE = 1024                      # uploads are kept at most this siz
 # defaults are the values the final models were trained with.
 CLS_SIZE, GREY = 320, (124, 116, 104)
 SEG_SIZE, SEG_THRESHOLD, MIN_PART, CUT_MARGIN, CUT_LONG = 320, 0.5, 0.05, 0.05, 512
+# Non-leaf check: the outline counts as a leaf only if at least LEAF_SURE_SHARE of it has segmenter probability
+# above LEAF_SURE_P. On the 701 whole test photos 94.6% pass (the rest are mostly wide whole-field shots); of 123
+# non-leaf photos (Windows wallpapers, COCO scenes) about 94% are rejected. Leaves of other crops mostly still pass.
+# Measured 5 Nov 2026: Images/nonleaf test/results/.
+LEAF_SURE_P, LEAF_SURE_SHARE = 0.9, 0.75
 
 # Severity = share of the LEAF (the segmenter's outline) where the Grad-CAM heat is at least HEAT_THRESHOLD.
 HEAT_THRESHOLD = 0.5
@@ -163,21 +168,30 @@ def _pad(img: Image.Image, size: int, grey) -> np.ndarray:
 
 def leaf_mask(img: Image.Image) -> np.ndarray | None:
     """The outlined leaf (or leaves) at the photo's own size, as found by the segmenter; specks are dropped.
-    None when no leaf is found."""
+    None when no leaf is found, or when the segmenter is unsure about its outline (not a leaf photo)."""
     from scipy import ndimage
 
     seg, cfg = _segmenter()
     size, grey = cfg.get("input_size", SEG_SIZE), tuple(cfg.get("grey", GREY))
+    thr, min_part = cfg.get("threshold", SEG_THRESHOLD), cfg.get("min_part", MIN_PART)
     w, h = img.size
     nw, nh, ox, oy = _fit(w, h, size)
-    p = seg(_pad(img, size, grey)[None], training=False).numpy()[0, ..., 0]
-    p = np.asarray(Image.fromarray(p[oy:oy + nh, ox:ox + nw]).resize((w, h), Image.BILINEAR))
-    mask = p > cfg.get("threshold", SEG_THRESHOLD)
+    p = seg(_pad(img, size, grey)[None], training=False).numpy()[0, ..., 0][oy:oy + nh, ox:ox + nw]
+    # Non-leaf check at the segmenter's own resolution (as measured).
+    parts, n = ndimage.label(p > thr)
+    if n == 0:
+        return None
+    sizes = ndimage.sum(p > thr, parts, range(1, n + 1))
+    outline = np.isin(parts, 1 + np.where(sizes >= min_part * sizes.sum())[0])
+    if (p[outline] > LEAF_SURE_P).mean() < LEAF_SURE_SHARE:
+        return None
+    p = np.asarray(Image.fromarray(p).resize((w, h), Image.BILINEAR))
+    mask = p > thr
     parts, n = ndimage.label(mask)
     if n == 0:
         return None
     sizes = ndimage.sum(mask, parts, range(1, n + 1))
-    return np.isin(parts, 1 + np.where(sizes >= cfg.get("min_part", MIN_PART) * sizes.sum())[0])
+    return np.isin(parts, 1 + np.where(sizes >= min_part * sizes.sum())[0])
 
 
 def cut_out(img: Image.Image, mask: np.ndarray, grey):
