@@ -209,10 +209,13 @@ def cut_out(img: Image.Image, mask: np.ndarray, grey):
     return cut, box
 
 
-def predict(loaded, stored: bytes) -> dict:
+def predict(loaded, stored: bytes, segment: bool = False) -> dict:
     """Class probabilities, plus the Grad-CAM heatmap (0-1) and the leaf mask, both at the photo's size.
-    The heatmap is computed on the leaf cut-out and put back where the leaf is; outside the leaf it is 0.
-    When the segmenter finds no leaf, only {"leaf_found": False} is returned: the photo is not classified."""
+    segment=True: the leaf is cut out first; the heatmap is computed on the cut-out and put back where the leaf is
+    (outside the leaf it is 0), and the severity is the share of the leaf. segment=False: the whole photo is
+    classified and the severity is the share of the whole photo.
+    The non-leaf check runs either way: when no leaf is found, or the segmenter is unsure of its outline, only
+    {"leaf_found": False} is returned and the photo is not classified."""
     from tf_keras_vis.utils.scores import CategoricalScore
 
     model, gradcam, layer, (size, grey) = loaded
@@ -221,7 +224,10 @@ def predict(loaded, stored: bytes) -> dict:
     mask = leaf_mask(img)
     if mask is None:
         return {"leaf_found": False}
-    cut, box = cut_out(img, mask, grey)
+    if segment:
+        cut, box = cut_out(img, mask, grey)
+    else:
+        cut, box, mask = img, (0, 0, w, h), np.ones((h, w), bool)
     x = _pad(cut, size, grey)
     probs = model(x[None], training=False).numpy()[0]
     top = int(probs.argmax())

@@ -144,7 +144,7 @@ def _model(name: str):
 def real_result(img: dict, lang: str) -> dict | None:
     """The trained models' result, or None when no leaf was found in the photo."""
     name = ss.settings["model"] if ss.settings["model"] in MODELS else MODELS[0]
-    out = pipeline.predict(_model(name), img["model_input"])
+    out = pipeline.predict(_model(name), img["model_input"], segment=bool(ss.settings.get("leaf_segmenter")))
     if not out["leaf_found"]:
         return None
     r = pipeline.result(name, out, (img["width"] or 800, img["height"] or 600), lang)
@@ -686,13 +686,21 @@ def settings_page():
         if MODELS:
             with st.container(key="sgroup__model"):
                 html(views.settings_group_title("Model"))
-                with st.container(key="srow__only__model", horizontal=True, vertical_alignment="center"):
+                with st.container(key="srow__first__model", horizontal=True, vertical_alignment="center"):
                     html(views.setting_text("Detection model",
                                             f"The trained CNN that analyzes photos ({pipeline.STAGE_LABEL}). "
                                             f"{pipeline.DEFAULT_MODEL} had the better F1-score."))
                     ss["sel__model"] = s["model"] if s["model"] in MODELS else MODELS[0]
                     st.selectbox("Detection model", MODELS, key="sel__model", label_visibility="collapsed",
                                  on_change=set_setting, args=("model", "sel__model"))
+                with st.container(key="srow__last__segmenter", horizontal=True, vertical_alignment="center"):
+                    html(views.setting_text("Leaf segmenter",
+                                            "On: the leaf is cut out of the photo before it is classified. "
+                                            "Off: the whole photo is classified. Photos with no leaf are rejected "
+                                            "either way."))
+                    ss["sw__segmenter"] = bool(s.get("leaf_segmenter"))
+                    st.toggle("Leaf segmenter", key="sw__segmenter", label_visibility="collapsed",
+                              on_change=set_setting, args=("leaf_segmenter", "sw__segmenter"))
         else:
             with st.container(key="sgroup__testing"):
                 html(views.settings_group_title("Testing"))

@@ -129,6 +129,7 @@ DEFAULT_SETTINGS = {
     "save_history": True,
     "mock_result": "Random",
     "model": "VGG16",          # used when the trained models are installed; keep equal to model.py DEFAULT_MODEL
+    "leaf_segmenter": False,   # True = cut the leaf out before classifying; False = classify the whole photo
 }
 
 TITLES = {"new-scan": "New Scan", "history": "Scan History", "about": "About", "settings": "Settings"}
